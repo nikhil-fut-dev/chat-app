@@ -4,6 +4,8 @@ import {
   sendMessageService,
   markDeliveredService,
   markSeenService,
+  editMessageService,
+  deleteMessageService,
 } from "../services/message.service.js";
 
 import { addUser, removeUser, getOnlineUsers } from "./onlineUsers.js";
@@ -113,6 +115,38 @@ export const registerSocketEvents = async (io, socket) => {
       io.to(senderId.toString()).emit("message-seen", {
         messageId: message._id,
       });
+    } catch (error) {
+      socket.emit("message-error", {
+        message: error.message,
+      });
+    }
+  });
+
+  // Edit Message
+  socket.on("edit-message", async ({ messageId, text }) => {
+    try {
+      const message = await editMessageService(
+        messageId,
+        socket.user._id,
+        text,
+      );
+
+      io.to(message.sender.toString()).emit("message-edited", message);
+      io.to(message.receiver.toString()).emit("message-edited", message);
+    } catch (error) {
+      socket.emit("message-error", {
+        message: error.message,
+      });
+    }
+  });
+
+  // Delete Message
+  socket.on("delete-message", async ({ messageId }) => {
+    try {
+      const message = await deleteMessageService(messageId, socket.user._id);
+
+      io.to(message.sender.toString()).emit("message-deleted", message);
+      io.to(message.receiver.toString()).emit("message-deleted", message);
     } catch (error) {
       socket.emit("message-error", {
         message: error.message,

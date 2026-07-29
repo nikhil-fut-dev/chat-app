@@ -6,6 +6,8 @@ import {
   getMessagesService,
   markDeliveredService,
   markSeenService,
+  editMessageService,
+  deleteMessageService,
 } from "../services/message.service.js";
 
 export const sendMessage = asyncHandler(async (req, res) => {
@@ -52,4 +54,24 @@ export const markSeen = asyncHandler(async (req, res) => {
   const message = await markSeenService(messageId);
 
   return res.status(200).json(new ApiResponse(200, "Message seen", message));
+});
+
+export const editMessage = asyncHandler(async (req, res) => {
+  const message = await editMessageService(
+    req.params.id,
+    req.user._id,
+    req.body.text,
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Message updated successfully", message));
+});
+
+export const deleteMessage = asyncHandler(async (req, res) => {
+  const message = await deleteMessageService(req.params.id, req.user._id);
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Message deleted successfully", message));
 });

@@ -53,3 +53,29 @@ export const markMessageSeen = (messageId) =>
     },
   );
 
+export const findMessageById = (id) => Message.findById(id);
+
+export const editMessage = (messageId, text) =>
+  Message.findByIdAndUpdate(
+    messageId,
+    {
+      text,
+      edited: true,
+    },
+    {
+      returnDocument: "after",
+    },
+  );
+
+export const deleteMessage = (messageId) =>
+  Message.findByIdAndUpdate(
+    messageId,
+    {
+      text: "This message was deleted",
+      attachments: [],
+      deleted: true,
+    },
+    {
+      returnDocument: "after",
+    },
+  );
