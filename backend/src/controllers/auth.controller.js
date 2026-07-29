@@ -1,7 +1,12 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
-import { registerService, loginService } from "../services/auth.service.js";
+import {
+  registerService,
+  loginService,
+  logoutService,
+  refreshTokenService,
+} from "../services/auth.service.js";
 
 import { accessCookieOptions, refreshCookieOptions } from "../utils/cookies.js";
 
@@ -31,4 +36,25 @@ export const login = asyncHandler(async (req, res) => {
         user: result.user,
       }),
     );
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  await logoutService(req.user._id);
+
+  res
+    .clearCookie("accessToken")
+    .clearCookie("refreshToken")
+    .status(200)
+    .json(new ApiResponse(200, "Logout successful"));
+});
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  const accessToken = await refreshTokenService(refreshToken);
+
+  res
+    .cookie("accessToken", accessToken, accessCookieOptions)
+    .status(200)
+    .json(new ApiResponse(200, "Access token refreshed"));
 });

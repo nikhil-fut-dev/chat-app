@@ -8,8 +8,12 @@ import {
   findUserWithPassword,
 } from "../repositories/user.repository.js";
 
-import { hashPassword, comparePassword, } from "../utils/password.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
+import { hashPassword, comparePassword } from "../utils/password.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt.js";
 
 export const registerService = async (userData) => {
   const { fullName, username, email, password } = userData;
@@ -88,4 +92,30 @@ export const loginService = async ({ email, password }) => {
     accessToken,
     refreshToken,
   };
+};
+
+export const logoutService = async (userId) => {
+  await updateUser(userId, {
+    refreshToken: "",
+  });
+};
+
+export const refreshTokenService = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required");
+  }
+
+  const decoded = verifyRefreshToken(refreshToken);
+
+  const user = await findUserByRefreshToken(refreshToken);
+
+  if (!user) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
+
+  const accessToken = generateAccessToken({
+    id: user._id,
+  });
+
+  return accessToken;
 };

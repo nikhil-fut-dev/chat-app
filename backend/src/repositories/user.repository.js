@@ -15,3 +15,6 @@ export const findSafeUserById = (id) =>
   User.findById(id).select("-password -refreshToken -__v");
 
 export const findUserWithPassword = (email) => User.findOne({ email });
+
+export const findUserByRefreshToken = (refreshToken) =>
+  User.findOne({ refreshToken });
