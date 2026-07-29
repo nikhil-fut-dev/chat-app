@@ -1,7 +1,6 @@
 import { Server } from "socket.io";
 
 import { socketAuth } from "./socket.auth.js";
-
 import { registerSocketEvents } from "./socket.events.js";
 
 export const initSocket = (server) => {
@@ -14,10 +13,8 @@ export const initSocket = (server) => {
 
   io.use(socketAuth);
 
-  io.on("connection", (socket) => {
-    console.log(`🟢 ${socket.user.username} connected`);
-
-    registerSocketEvents(io, socket);
+  io.on("connection", async (socket) => {
+    await registerSocketEvents(io, socket);
   });
 
   return io;

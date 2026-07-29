@@ -18,3 +18,15 @@ export const findUserWithPassword = (email) => User.findOne({ email });
 
 export const findUserByRefreshToken = (refreshToken) =>
   User.findOne({ refreshToken });
+
+export const updateUserStatus = (id, status) =>
+  User.findByIdAndUpdate(
+    id,
+    {
+      isOnline: status,
+      lastSeen: status ? null : new Date(),
+    },
+    {
+      returnDocument: "after",
+    },
+  );

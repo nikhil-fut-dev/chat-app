@@ -52,3 +52,4 @@ export const markMessageSeen = (messageId) =>
       new: true,
     },
   );
+

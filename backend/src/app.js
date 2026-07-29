@@ -12,6 +12,7 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import conversationRoutes from "./routes/conversation.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/conversations", conversationRoutes);
 app.use("/api/v1/upload", uploadRoutes);
+app.use("/api/v1/messages", messageRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
