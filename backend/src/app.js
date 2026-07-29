@@ -10,6 +10,8 @@ import errorHandler from "./middlewares/error.middleware.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import conversationRoutes from "./routes/conversation.routes.js";
+import uploadRoutes from "./routes/upload.routes.js";
 
 const app = express();
 
@@ -35,6 +37,8 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/conversations", conversationRoutes);
+app.use("/api/v1/upload", uploadRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
