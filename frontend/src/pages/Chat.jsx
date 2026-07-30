@@ -24,6 +24,7 @@ export default function Chat() {
   useOnlineStatus();
 
   const [editingMessage, setEditingMessage] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
 
@@ -34,6 +35,7 @@ export default function Chat() {
   const receiverId = activeConversation?.user?._id;
 
   const { isTyping } = useMessageSocket(receiverId);
+
   console.log("🔥 CHAT RENDER isTyping =", isTyping);
 
   const {
@@ -147,9 +149,16 @@ export default function Chat() {
   };
 
   return (
-    <ChatLayout>
+    <ChatLayout
+      sidebarOpen={sidebarOpen}
+      onOpenSidebar={() => setSidebarOpen(true)}
+      onCloseSidebar={() => setSidebarOpen(false)}
+    >
       <div className="flex h-full min-w-0 flex-col bg-slate-950">
-        <ChatHeader isTyping={isTyping} />
+        <ChatHeader
+          isTyping={isTyping}
+          onOpenSidebar={() => setSidebarOpen(true)}
+        />
 
         {activeConversation ? (
           <>

@@ -1,7 +1,7 @@
-import { Phone, Search, Video } from "lucide-react";
+import { Menu, Phone, Search, Video } from "lucide-react";
 import { useSelector } from "react-redux";
 
-export default function ChatHeader({ isTyping = false }) {
+export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
   const activeConversation = useSelector(
     (state) => state.conversations.activeConversation,
   );
@@ -23,9 +23,18 @@ export default function ChatHeader({ isTyping = false }) {
   const displayName = user.fullName || user.username || "Unknown user";
 
   return (
-    <header className="flex h-[76px] items-center justify-between border-b border-slate-800 bg-slate-950 px-5">
+    <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-3 sm:h-[76px] sm:px-5">
       {/* LEFT */}
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={onOpenSidebar}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-900 hover:text-slate-100 lg:hidden"
+          aria-label="Open conversations"
+          title="Conversations"
+        >
+          <Menu size={21} />
+        </button>
         {/* Avatar */}
         <div className="relative shrink-0">
           {user.avatar ? (
@@ -79,10 +88,10 @@ export default function ChatHeader({ isTyping = false }) {
       </div>
 
       {/* ACTIONS */}
-      <div className="flex items-center gap-1">
+      <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200"
+          className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 sm:h-10 sm:w-10"
           title="Search"
         >
           <Search size={19} />
@@ -90,7 +99,7 @@ export default function ChatHeader({ isTyping = false }) {
 
         <button
           type="button"
-          className="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 sm:flex"
+          className="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 md:flex"
           title="Voice call"
         >
           <Phone size={19} />

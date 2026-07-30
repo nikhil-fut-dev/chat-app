@@ -15,7 +15,7 @@ import {
   setActiveConversation,
 } from "../../store/slices/conversationSlice";
 
-export default function ChatSidebar() {
+export default function ChatSidebar({ isOpen = false, onClose = () => {} }) {
   const dispatch = useDispatch();
 
   const [showUserSearch, setShowUserSearch] = useState(false);
@@ -62,22 +62,36 @@ export default function ChatSidebar() {
      */
     const temporaryConversation = {
       conversationId: `new-${user._id}`,
-
       user,
-
       lastMessage: null,
-
       updatedAt: null,
     };
 
     dispatch(setActiveConversation(temporaryConversation));
 
     setShowUserSearch(false);
+
+    onClose();
   };
 
   return (
     <>
-      <aside className="flex h-full w-[360px] shrink-0 flex-col border-r border-slate-800 bg-slate-950">
+      <aside
+        className={`
+    fixed inset-y-0 left-0 z-50
+    flex h-full w-[min(360px,88vw)] min-w-0 flex-col
+    border-r border-slate-800 bg-slate-950
+    transition-transform duration-300 ease-in-out
+
+    ${isOpen ? "translate-x-0" : "-translate-x-full"}
+
+    lg:static
+    lg:z-auto
+    lg:h-full
+    lg:w-[360px]
+    lg:translate-x-0
+  `}
+      >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
           <div className="flex min-w-0 items-center gap-3">
