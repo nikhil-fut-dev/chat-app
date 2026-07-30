@@ -34,7 +34,31 @@ const messageSlice = createSlice({
       );
 
       if (index !== -1) {
-        state.messages[index] = action.payload;
+        state.messages[index] = {
+          ...state.messages[index],
+          ...action.payload,
+        };
+      }
+    },
+
+    markMessageDelivered: (state, action) => {
+      const message = state.messages.find(
+        (item) => item._id === action.payload,
+      );
+
+      if (message) {
+        message.isDelivered = true;
+      }
+    },
+
+    markMessageSeen: (state, action) => {
+      const message = state.messages.find(
+        (item) => item._id === action.payload,
+      );
+
+      if (message) {
+        message.isDelivered = true;
+        message.isSeen = true;
       }
     },
 
@@ -74,6 +98,8 @@ export const {
   setMessageSending,
   setMessageError,
   clearMessages,
+  markMessageDelivered,
+  markMessageSeen,
 } = messageSlice.actions;
 
 export default messageSlice.reducer;

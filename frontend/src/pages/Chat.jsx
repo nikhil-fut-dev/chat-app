@@ -8,6 +8,7 @@ import MessageList from "../components/chat/messages/MessageList";
 import MessageComposer from "../components/chat/composer/MessageComposer";
 
 import useMessages from "../hooks/useMessages";
+import useMessageSocket from "../hooks/useMessageSocket";
 
 import { getConversations } from "../api/conversationApi";
 
@@ -28,6 +29,9 @@ export default function Chat() {
   );
 
   const receiverId = activeConversation?.user?._id;
+
+  const { isTyping } = useMessageSocket(receiverId);
+  console.log("🔥 CHAT RENDER isTyping =", isTyping);
 
   const {
     messages,
@@ -142,7 +146,7 @@ export default function Chat() {
   return (
     <ChatLayout>
       <div className="flex h-full min-w-0 flex-col bg-slate-950">
-        <ChatHeader />
+        <ChatHeader isTyping={isTyping} />
 
         {activeConversation ? (
           <>

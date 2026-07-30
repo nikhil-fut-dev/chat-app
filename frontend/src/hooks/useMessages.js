@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
@@ -21,6 +21,9 @@ import { useSocketContext } from "../context/SocketContext";
 import { SOCKET_EVENTS } from "../socket/socketEvents";
 
 export default function useMessages(receiverId) {
+  const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+
   const dispatch = useDispatch();
 
   const { socket, isConnected } = useSocketContext();
@@ -192,20 +195,58 @@ export default function useMessages(receiverId) {
       return;
     }
 
-    socket.emit(SOCKET_EVENTS.TYPING, {
-      receiverId,
-    });
+    if (!isTypingRef.current) {
+      console.log("📤 Sending TYPING event");
+
+      socket.emit(SOCKET_EVENTS.TYPING, {
+        receiverId,
+      });
+
+      isTypingRef.current = true;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      if (!socket || !isConnected || !receiverId) {
+        return;
+      }
+
+      console.log("📤 Sending STOP TYPING event");
+
+      socket.emit(SOCKET_EVENTS.STOP_TYPING, {
+        receiverId,
+      });
+
+      isTypingRef.current = false;
+      typingTimeoutRef.current = null;
+    }, 1500);
   };
 
   const stopTyping = () => {
-    if (!socket || !isConnected || !receiverId) {
-      return;
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
     }
 
-    socket.emit(SOCKET_EVENTS.STOP_TYPING, {
-      receiverId,
-    });
+    if (socket && isConnected && receiverId && isTypingRef.current) {
+      socket.emit(SOCKET_EVENTS.STOP_TYPING, {
+        receiverId,
+      });
+    }
+
+    isTypingRef.current = false;
   };
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     messages,

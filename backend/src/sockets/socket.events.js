@@ -52,20 +52,36 @@ export const registerSocketEvents = async (io, socket) => {
   });
 
   // ============================
-  // Typing
+  // Typing Indicator
   // ============================
 
   socket.on("typing", ({ receiverId }) => {
-    io.to(receiverId.toString()).emit("user-typing", {
-      userId: socket.user._id,
-      username: socket.user.username,
-    });
+    try {
+      if (!receiverId) return;
+
+      console.log(`⌨️ ${socket.user.username} is typing to ${receiverId}`);
+
+      io.to(receiverId.toString()).emit("user-typing", {
+        userId: socket.user._id.toString(),
+        username: socket.user.username,
+      });
+    } catch (error) {
+      console.error("Typing Error:", error.message);
+    }
   });
 
   socket.on("stop-typing", ({ receiverId }) => {
-    io.to(receiverId.toString()).emit("user-stop-typing", {
-      userId: socket.user._id,
-    });
+    try {
+      if (!receiverId) return;
+
+      console.log(`⏹️ ${socket.user.username} stopped typing to ${receiverId}`);
+
+      io.to(receiverId.toString()).emit("user-stop-typing", {
+        userId: socket.user._id.toString(),
+      });
+    } catch (error) {
+      console.error("Stop Typing Error:", error.message);
+    }
   });
 
   // ============================

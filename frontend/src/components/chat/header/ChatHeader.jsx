@@ -1,12 +1,14 @@
 import { Phone, Search, Video } from "lucide-react";
 import { useSelector } from "react-redux";
 
-export default function ChatHeader() {
+export default function ChatHeader({ isTyping = false }) {
   const activeConversation = useSelector(
     (state) => state.conversations.activeConversation,
   );
 
   const user = activeConversation?.user;
+
+  console.log("🧠 CHAT HEADER isTyping =", isTyping);
 
   if (!user) {
     return (
@@ -22,7 +24,9 @@ export default function ChatHeader() {
 
   return (
     <header className="flex h-[76px] items-center justify-between border-b border-slate-800 bg-slate-950 px-5">
+      {/* LEFT */}
       <div className="flex min-w-0 items-center gap-3">
+        {/* Avatar */}
         <div className="relative shrink-0">
           {user.avatar ? (
             <img
@@ -41,21 +45,40 @@ export default function ChatHeader() {
           )}
         </div>
 
+        {/* User Info */}
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold text-slate-100">
             {displayName}
           </h2>
 
-          <p className="mt-0.5 text-xs text-slate-500">
-            {user.isOnline
-              ? "Online"
-              : user.lastSeen
-                ? `Last seen ${new Date(user.lastSeen).toLocaleString()}`
-                : `@${user.username || "user"}`}
-          </p>
+          {/* STATUS */}
+          <div className="mt-0.5 h-5">
+            {isTyping ? (
+              <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400">
+                <span>Typing</span>
+
+                <span className="flex items-center gap-0.5">
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.3s]" />
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.15s]" />
+                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400" />
+                </span>
+              </div>
+            ) : user.isOnline ? (
+              <p className="text-xs text-slate-500">Online</p>
+            ) : user.lastSeen ? (
+              <p className="text-xs text-slate-500">
+                Last seen {new Date(user.lastSeen).toLocaleString()}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500">
+                @{user.username || "user"}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* ACTIONS */}
       <div className="flex items-center gap-1">
         <button
           type="button"
