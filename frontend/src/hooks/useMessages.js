@@ -222,7 +222,7 @@ export default function useMessages(receiverId) {
 
       isTypingRef.current = false;
       typingTimeoutRef.current = null;
-    }, 1500);
+    }, 1000);
   };
 
   const stopTyping = () => {

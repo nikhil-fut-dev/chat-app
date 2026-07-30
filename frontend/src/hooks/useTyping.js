@@ -56,7 +56,7 @@ export default function useTyping(receiverId) {
 
     typingTimeoutRef.current = setTimeout(() => {
       stopTyping();
-    }, 1500);
+    }, 1000);
   };
 
   // ==========================================
