@@ -30,3 +30,24 @@ export const updateUserStatus = (id, status) =>
       returnDocument: "after",
     },
   );
+
+export const searchUsers = (query, currentUserId) =>
+  User.find({
+    _id: { $ne: currentUserId },
+    $or: [
+      {
+        username: {
+          $regex: query,
+          $options: "i",
+        },
+      },
+      {
+        fullName: {
+          $regex: query,
+          $options: "i",
+        },
+      },
+    ],
+  })
+    .select("_id fullName username avatar isOnline lastSeen")
+    .limit(20);
