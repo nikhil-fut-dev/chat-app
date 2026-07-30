@@ -93,6 +93,32 @@ const conversationSlice = createSlice({
         (a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0),
       );
     },
+
+    updateUserOnlineStatus: (state, action) => {
+      const { userId, isOnline } = action.payload;
+
+      const updateUser = (user) => {
+        if (!user?._id) return;
+
+        if (user._id.toString() === userId.toString()) {
+          user.isOnline = isOnline;
+
+          if (!isOnline) {
+            user.lastSeen = new Date().toISOString();
+          }
+        }
+      };
+
+      // Conversation list
+      state.conversations.forEach((conversation) => {
+        updateUser(conversation.user);
+      });
+
+      // Active conversation
+      if (state.activeConversation?.user) {
+        updateUser(state.activeConversation.user);
+      }
+    },
   },
 });
 
@@ -105,6 +131,7 @@ export const {
   clearConversations,
   updateConversationLastMessage,
   upsertConversation,
+  updateUserOnlineStatus,
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

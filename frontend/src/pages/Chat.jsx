@@ -9,6 +9,7 @@ import MessageComposer from "../components/chat/composer/MessageComposer";
 
 import useMessages from "../hooks/useMessages";
 import useMessageSocket from "../hooks/useMessageSocket";
+import useOnlineStatus from "../hooks/useOnlineStatus";
 
 import { getConversations } from "../api/conversationApi";
 
@@ -19,6 +20,8 @@ import {
 
 export default function Chat() {
   const dispatch = useDispatch();
+
+  useOnlineStatus();
 
   const [editingMessage, setEditingMessage] = useState(null);
 
