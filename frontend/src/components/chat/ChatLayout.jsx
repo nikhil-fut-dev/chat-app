@@ -12,7 +12,7 @@ export default function ChatLayout({
   );
 
   return (
-    <main className="h-[100dvh] overflow-hidden bg-slate-950 text-white">
+    <main className="h-screen overflow-hidden bg-slate-950 text-white">
       <div className="relative flex h-full min-w-0">
         {/* Mobile Overlay */}
         {sidebarOpen && (
@@ -29,7 +29,7 @@ export default function ChatLayout({
 
         {/* Main Chat Area */}
         {/* Main Chat Area */}
-        <section className="relative min-w-0 flex-1">
+        <section className="relative min-h-0 min-w-0 flex-1">
           {/* Mobile: Open conversations */}
           {!activeConversation && (
             <button
