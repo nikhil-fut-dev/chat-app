@@ -12,7 +12,7 @@ export default function ChatLayout({
   );
 
   return (
-    <main className="h-screen overflow-hidden bg-slate-950 text-white">
+    <main className="h-[100dvh] overflow-hidden overscroll-none bg-slate-950 text-white">
       <div className="relative flex h-full min-w-0">
         {/* Mobile Overlay */}
         {sidebarOpen && (
