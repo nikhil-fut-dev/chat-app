@@ -17,7 +17,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                 <MessageCircle size={23} />
               </div>
 
-              <span className="text-xl font-bold tracking-tight">ChatFlow</span>
+              <span className="text-xl font-bold tracking-tight">CBNK • Chat-App</span>
             </div>
 
             <div className="max-w-lg">
