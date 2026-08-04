@@ -154,7 +154,7 @@ export default function Chat() {
       onOpenSidebar={() => setSidebarOpen(true)}
       onCloseSidebar={() => setSidebarOpen(false)}
     >
-      <div className="flex h-full min-w-0 flex-col bg-slate-950">
+      <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-slate-950">
         <ChatHeader
           isTyping={isTyping}
           onOpenSidebar={() => setSidebarOpen(true)}

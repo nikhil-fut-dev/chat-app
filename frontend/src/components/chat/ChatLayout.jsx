@@ -28,8 +28,7 @@ export default function ChatLayout({
         <ChatSidebar isOpen={sidebarOpen} onClose={onCloseSidebar} />
 
         {/* Main Chat Area */}
-        {/* Main Chat Area */}
-        <section className="relative min-h-0 min-w-0 flex-1">
+        <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           {/* Mobile: Open conversations */}
           {!activeConversation && (
             <button
