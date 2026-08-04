@@ -47,7 +47,7 @@ export default function MessageComposer({
   };
 
   return (
-    <div className="shrink-0 border-t border-slate-800 bg-slate-950 px-4 py-3 sm:px-6 sm:py-4">
+    <div className="border-t border-slate-800 bg-slate-950 px-4 py-4 sm:px-6">
       {editingMessage && (
         <div className="mx-auto mb-3 flex max-w-4xl items-center justify-between rounded-xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-2.5">
           <div>

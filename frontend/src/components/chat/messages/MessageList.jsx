@@ -4,9 +4,13 @@ import { useSelector } from "react-redux";
 
 import Loader from "../../common/Loader";
 import MessageBubble from "./MessageBubble";
+import { useSocketContext } from "../../../context/SocketContext";
+import { SOCKET_EVENTS } from "../../../socket/socketEvents";
 
 export default function MessageList({ messages, loading, onEdit, onDelete }) {
   const bottomRef = useRef(null);
+
+  const { socket, isConnected } = useSocketContext();
 
   const { user } = useSelector((state) => state.auth);
 
@@ -15,6 +19,40 @@ export default function MessageList({ messages, loading, onEdit, onDelete }) {
       behavior: "smooth",
     });
   }, [messages]);
+
+  // ==========================================
+  // MARK INCOMING MESSAGES AS SEEN
+  // ==========================================
+
+  useEffect(() => {
+    if (!socket || !isConnected || !user?._id) {
+      return;
+    }
+
+    messages.forEach((message) => {
+      const senderId =
+        typeof message.sender === "object"
+          ? message.sender?._id
+          : message.sender;
+
+      const receiverId =
+        typeof message.receiver === "object"
+          ? message.receiver?._id
+          : message.receiver;
+
+      const isIncoming = senderId?.toString() !== user._id?.toString();
+
+      const belongsToCurrentUser =
+        receiverId?.toString() === user._id?.toString();
+
+      if (isIncoming && belongsToCurrentUser && !message.isSeen) {
+        socket.emit(SOCKET_EVENTS.MESSAGE_SEEN, {
+          messageId: message._id,
+          senderId,
+        });
+      }
+    });
+  }, [messages, socket, isConnected, user?._id]);
 
   if (loading) {
     return (
