@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import MessageStatus from "./MessageStatus";
 
 export default function MessageBubble({
@@ -9,6 +8,9 @@ export default function MessageBubble({
   onDelete,
 }) {
   const [showActions, setShowActions] = useState(false);
+
+  const pressTimerRef = useRef(null);
+  const longPressTriggeredRef = useRef(false);
 
   const senderId =
     typeof message.sender === "object" ? message.sender?._id : message.sender;
@@ -22,28 +24,98 @@ export default function MessageBubble({
       })
     : "";
 
+  // ==========================================
+  // Close menu when clicking outside
+  // ==========================================
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!event.target.closest("[data-message-actions]")) {
+        setShowActions(false);
+      }
+    };
+
+    document.addEventListener("click", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("click", handleOutsideClick);
+    };
+  }, []);
+
+  // ==========================================
+  // Long Press
+  // ==========================================
+
+  const startLongPress = () => {
+    if (!isOwn || message.deleted) {
+      return;
+    }
+
+    longPressTriggeredRef.current = false;
+
+    pressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setShowActions(true);
+
+      // Small vibration on supported mobile devices
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }, 500);
+  };
+
+  const cancelLongPress = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  // ==========================================
+  // Right Click - Desktop
+  // ==========================================
+
+  const handleContextMenu = (event) => {
+    if (!isOwn || message.deleted) {
+      return;
+    }
+
+    event.preventDefault();
+
+    cancelLongPress();
+    setShowActions(true);
+  };
+
+  // ==========================================
+  // Edit
+  // ==========================================
+
   const handleEdit = () => {
     setShowActions(false);
+    cancelLongPress();
+
     onEdit?.(message);
   };
 
+  // ==========================================
+  // Delete
+  // ==========================================
+
   const handleDelete = () => {
     setShowActions(false);
+    cancelLongPress();
+
     onDelete?.(message);
   };
 
   return (
-    <div
-      className={`group flex w-full ${isOwn ? "justify-end" : "justify-start"}`}
-    >
+    <div className={`flex w-full ${isOwn ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[88%] items-end gap-2 sm:max-w-[65%] ${
+        className={`flex max-w-[78%] items-end gap-2 sm:max-w-[65%] ${
           isOwn ? "flex-row-reverse" : ""
         }`}
       >
-        {/* =========================================
-            Incoming Message Avatar
-        ========================================== */}
+        {/* Avatar for incoming messages */}
         {!isOwn && (
           <div className="mb-1 shrink-0">
             {message.sender?.avatar ? (
@@ -62,84 +134,57 @@ export default function MessageBubble({
           </div>
         )}
 
-        <div className="relative min-w-0">
-          {/* =========================================
-              Message Actions
+        {/* Message */}
+        <div
+          className="relative min-w-0"
+          data-message-actions
+          onPointerDown={startLongPress}
+          onPointerUp={cancelLongPress}
+          onPointerLeave={cancelLongPress}
+          onPointerCancel={cancelLongPress}
+          onContextMenu={handleContextMenu}
+        >
+          {/* ==========================================
+              Edit / Delete Menu
           ========================================== */}
-          {isOwn && !message.deleted && (
-            <>
-              {/* -----------------------------------------
-                  Desktop Actions
-                  Visible on hover
-              ------------------------------------------ */}
-              <div className="absolute -top-8 right-0 z-20 hidden items-center rounded-lg border border-slate-800 bg-slate-900 p-1 shadow-xl sm:group-hover:flex">
-                <button
-                  type="button"
-                  onClick={handleEdit}
-                  className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                >
-                  Edit
-                </button>
 
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="rounded-md px-2 py-1 text-[11px] font-medium text-red-400 transition hover:bg-red-500/10"
-                >
-                  Delete
-                </button>
-              </div>
-
-              {/* -----------------------------------------
-                  Mobile More Button
-              ------------------------------------------ */}
+          {showActions && isOwn && !message.deleted && (
+            <div
+              className={`absolute z-50 ${
+                isOwn ? "right-0" : "left-0"
+              } bottom-full mb-2 flex items-center overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-1 shadow-2xl`}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               <button
                 type="button"
-                onClick={() => setShowActions((prev) => !prev)}
-                className="absolute -top-8 right-0 z-30 flex h-7 w-7 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400 shadow-lg transition hover:bg-slate-800 hover:text-white sm:hidden"
-                aria-label="Message actions"
-                title="Message actions"
+                onClick={handleEdit}
+                className="rounded-lg px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white active:bg-slate-700"
               >
-                <MoreHorizontal size={16} />
+                Edit
               </button>
 
-              {/* -----------------------------------------
-                  Mobile Actions Menu
-              ------------------------------------------ */}
-              {showActions && (
-                <div className="absolute -top-8 right-8 z-40 flex items-center gap-1 rounded-lg border border-slate-800 bg-slate-900 p-1 shadow-xl sm:hidden">
-                  <button
-                    type="button"
-                    onClick={handleEdit}
-                    className="rounded-md px-2.5 py-1 text-[11px] font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                  >
-                    Edit
-                  </button>
+              <div className="h-5 w-px bg-slate-700" />
 
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    className="rounded-md px-2.5 py-1 text-[11px] font-medium text-red-400 transition hover:bg-red-500/10"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="rounded-lg px-3 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/10 active:bg-red-500/20"
+              >
+                Delete
+              </button>
+            </div>
           )}
 
-          {/* =========================================
-              Message Bubble
-          ========================================== */}
+          {/* Message Bubble */}
           <div
             className={[
               "rounded-2xl px-4 py-2.5 shadow-sm",
+              "select-none touch-manipulation",
               isOwn
                 ? "rounded-br-md bg-indigo-500 text-white"
                 : "rounded-bl-md border border-slate-800 bg-slate-900 text-slate-200",
             ].join(" ")}
           >
-            {/* Message Text */}
             {message.deleted ? (
               <p className="text-sm italic opacity-60">
                 This message was deleted
@@ -150,23 +195,17 @@ export default function MessageBubble({
               </p>
             )}
 
-            {/* =========================================
-                Message Meta
-            ========================================== */}
             <div
               className={`mt-1.5 flex items-center justify-end gap-1.5 ${
                 isOwn ? "text-indigo-200" : "text-slate-600"
               }`}
             >
-              {/* Edited Label */}
               {message.edited && !message.deleted && (
                 <span className="text-[10px]">edited</span>
               )}
 
-              {/* Time */}
               <span className="text-[10px]">{time}</span>
 
-              {/* Message Status */}
               {isOwn && <MessageStatus message={message} />}
             </div>
           </div>
