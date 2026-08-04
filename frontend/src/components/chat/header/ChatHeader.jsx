@@ -12,7 +12,7 @@ export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
 
   if (!user) {
     return (
-      <header className="flex h-[76px] items-center border-b border-slate-800 bg-slate-950 px-5">
+      <header className="flex h-[76px] shrink-0 items-center border-b border-slate-800 bg-slate-950 px-5">
         <p className="text-sm text-slate-500">
           Select a conversation to start chatting
         </p>
@@ -23,7 +23,7 @@ export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
   const displayName = user.fullName || user.username || "Unknown user";
 
   return (
-    <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-3 sm:h-[76px] sm:px-5">
+    <header className="relative z-20 flex h-[68px] shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-3 sm:h-[76px] sm:px-5">
       {/* LEFT */}
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         <button
