@@ -2,11 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
-import {
-  getMessages,
-  editMessage as editMessageApi,
-  deleteMessage as deleteMessageApi,
-} from "../api/messageApi";
+import { getMessages } from "../api/messageApi";
 
 import {
   setMessages,
@@ -67,7 +63,7 @@ export default function useMessages(receiverId) {
   }, [fetchMessages]);
 
   // ==========================================
-  // Socket Receive / Sent
+  // Socket Receive / Send / Edit / Delete
   // ==========================================
 
   useEffect(() => {
@@ -75,7 +71,10 @@ export default function useMessages(receiverId) {
       return;
     }
 
-    // Receiver gets this
+    // ========================================
+    // Receive Message
+    // ========================================
+
     const handleReceiveMessage = (message) => {
       const senderId =
         typeof message.sender === "object"
@@ -100,7 +99,10 @@ export default function useMessages(receiverId) {
       dispatch(addMessage(message));
     };
 
-    // Sender gets this
+    // ========================================
+    // Message Sent
+    // ========================================
+
     const handleMessageSent = (message) => {
       const messageReceiverId =
         typeof message.receiver === "object"
@@ -114,14 +116,96 @@ export default function useMessages(receiverId) {
       dispatch(addMessage(message));
     };
 
+    // ========================================
+    // Message Edited - REAL TIME
+    // ========================================
+
+    const handleMessageEdited = (message) => {
+      console.log("✏️ MESSAGE EDITED RECEIVED:", message);
+
+      const senderId =
+        typeof message.sender === "object"
+          ? message.sender?._id
+          : message.sender;
+
+      const messageReceiverId =
+        typeof message.receiver === "object"
+          ? message.receiver?._id
+          : message.receiver;
+
+      const isCurrentConversation =
+        (senderId?.toString() === receiverId?.toString() &&
+          messageReceiverId?.toString() === currentUser?._id?.toString()) ||
+        (senderId?.toString() === currentUser?._id?.toString() &&
+          messageReceiverId?.toString() === receiverId?.toString());
+
+      if (!isCurrentConversation) {
+        return;
+      }
+
+      dispatch(updateMessage(message));
+    };
+
+    // ========================================
+    // Message Deleted - REAL TIME
+    // ========================================
+
+    const handleMessageDeleted = (message) => {
+      console.log("🗑️ MESSAGE DELETED RECEIVED:", message);
+
+      const senderId =
+        typeof message.sender === "object"
+          ? message.sender?._id
+          : message.sender;
+
+      const messageReceiverId =
+        typeof message.receiver === "object"
+          ? message.receiver?._id
+          : message.receiver;
+
+      const isCurrentConversation =
+        (senderId?.toString() === receiverId?.toString() &&
+          messageReceiverId?.toString() === currentUser?._id?.toString()) ||
+        (senderId?.toString() === currentUser?._id?.toString() &&
+          messageReceiverId?.toString() === receiverId?.toString());
+
+      if (!isCurrentConversation) {
+        return;
+      }
+
+      dispatch(updateMessage(message));
+    };
+
+    // ========================================
+    // Message Error
+    // ========================================
+
+    const handleMessageError = (error) => {
+      console.error("❌ MESSAGE SOCKET ERROR:", error);
+
+      toast.error(error?.message || "Something went wrong.");
+    };
+
     socket.on(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
 
     socket.on(SOCKET_EVENTS.MESSAGE_SENT, handleMessageSent);
+
+    socket.on(SOCKET_EVENTS.MESSAGE_EDITED, handleMessageEdited);
+
+    socket.on(SOCKET_EVENTS.MESSAGE_DELETED, handleMessageDeleted);
+
+    socket.on(SOCKET_EVENTS.MESSAGE_ERROR, handleMessageError);
 
     return () => {
       socket.off(SOCKET_EVENTS.RECEIVE_MESSAGE, handleReceiveMessage);
 
       socket.off(SOCKET_EVENTS.MESSAGE_SENT, handleMessageSent);
+
+      socket.off(SOCKET_EVENTS.MESSAGE_EDITED, handleMessageEdited);
+
+      socket.off(SOCKET_EVENTS.MESSAGE_DELETED, handleMessageDeleted);
+
+      socket.off(SOCKET_EVENTS.MESSAGE_ERROR, handleMessageError);
     };
   }, [socket, isConnected, receiverId, currentUser?._id, dispatch]);
 
@@ -141,54 +225,51 @@ export default function useMessages(receiverId) {
       text: text.trim(),
     });
 
-    // Socket backend handles actual sending.
-    // message-sent event will update Redux.
     dispatch(setMessageSending(false));
 
     return true;
   };
 
   // ==========================================
-  // Edit Message
+  // Edit Message - REAL TIME SOCKET
   // ==========================================
 
   const editMessage = async (messageId, text) => {
-    try {
-      const response = await editMessageApi(messageId, text);
-
-      dispatch(updateMessage(response.data));
-
-      toast.success("Message updated");
-
-      return true;
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Unable to edit message.");
-
+    if (!messageId || !text?.trim() || !socket || !isConnected) {
       return false;
     }
+
+    console.log("✏️ Sending EDIT MESSAGE:", messageId);
+
+    socket.emit(SOCKET_EVENTS.EDIT_MESSAGE, {
+      messageId,
+      text: text.trim(),
+    });
+
+    return true;
   };
 
   // ==========================================
-  // Delete Message
+  // Delete Message - REAL TIME SOCKET
   // ==========================================
 
   const deleteMessage = async (messageId) => {
-    try {
-      const response = await deleteMessageApi(messageId);
-
-      dispatch(updateMessage(response.data));
-
-      toast.success("Message deleted");
-
-      return true;
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Unable to delete message.",
-      );
-
+    if (!messageId || !socket || !isConnected) {
       return false;
     }
+
+    console.log("🗑️ Sending DELETE MESSAGE:", messageId);
+
+    socket.emit(SOCKET_EVENTS.DELETE_MESSAGE, {
+      messageId,
+    });
+
+    return true;
   };
+
+  // ==========================================
+  // Typing Indicator
+  // ==========================================
 
   const startTyping = () => {
     if (!socket || !isConnected || !receiverId) {
@@ -239,6 +320,10 @@ export default function useMessages(receiverId) {
 
     isTypingRef.current = false;
   };
+
+  // ==========================================
+  // Cleanup Typing
+  // ==========================================
 
   useEffect(() => {
     return () => {
