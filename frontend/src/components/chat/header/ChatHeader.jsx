@@ -12,7 +12,7 @@ export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
 
   if (!user) {
     return (
-      <header className="flex h-[76px] min-h-[76px] shrink-0 items-center border-b border-slate-800 bg-slate-950 px-4 sm:px-5">
+      <header className="flex h-[76px] items-center border-b border-slate-800 bg-slate-950 px-5">
         <p className="text-sm text-slate-500">
           Select a conversation to start chatting
         </p>
