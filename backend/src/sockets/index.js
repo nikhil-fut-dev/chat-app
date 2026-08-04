@@ -2,11 +2,12 @@ import { Server } from "socket.io";
 
 import { socketAuth } from "./socket.auth.js";
 import { registerSocketEvents } from "./socket.events.js";
+import env from "../config/env.js";
 
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: env.CLIENT_URL,
       credentials: true,
     },
   });

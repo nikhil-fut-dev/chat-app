@@ -4,6 +4,8 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 
+import env from "./config/env.js";
+
 import ApiResponse from "./utils/ApiResponse.js";
 import notFound from "./middlewares/notFound.middleware.js";
 import errorHandler from "./middlewares/error.middleware.js";
@@ -20,7 +22,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: env.CLIENT_URL,
     credentials: true,
   }),
 );
