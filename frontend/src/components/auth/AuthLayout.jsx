@@ -40,7 +40,7 @@ export default function AuthLayout({ children, title, subtitle }) {
             </div>
 
             <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} ChatFlow
+              © {new Date().getFullYear()} CBNK • Chat-App
             </p>
           </div>
         </section>
@@ -54,7 +54,7 @@ export default function AuthLayout({ children, title, subtitle }) {
                   <MessageCircle size={21} />
                 </div>
 
-                <span className="text-xl font-bold">ChatFlow</span>
+                <span className="text-xl font-bold">CBNK • Chat-App</span>
               </div>
             </div>
 

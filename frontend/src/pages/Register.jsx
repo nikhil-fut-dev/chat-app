@@ -5,7 +5,7 @@ export default function Register() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join ChatFlow and start connecting with people."
+      subtitle="Join CBNK • Chat-App and start connecting with people."
     >
       <RegisterForm />
     </AuthLayout>

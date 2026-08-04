@@ -101,7 +101,7 @@ export default function ChatSidebar({ isOpen = false, onClose = () => {} }) {
 
             <div className="min-w-0">
               <h1 className="truncate text-lg font-bold tracking-tight text-slate-100">
-                ChatFlow
+                CBNK • Chat-App
               </h1>
 
               <p className="text-xs text-slate-500">Messages</p>
