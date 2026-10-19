@@ -276,34 +276,31 @@ export default function useMessages(receiverId) {
       return;
     }
 
-    if (!isTypingRef.current) {
-      console.log("📤 Sending TYPING event");
+    // Har keystroke par typing event bhejo,
+    // taaki receiver ka indicator timeout reset hota rahe.
+    socket.emit(SOCKET_EVENTS.TYPING, {
+      receiverId,
+    });
 
-      socket.emit(SOCKET_EVENTS.TYPING, {
-        receiverId,
-      });
+    isTypingRef.current = true;
 
-      isTypingRef.current = true;
-    }
-
+    // Pichhla stop timer cancel karo.
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
+    // User 1.5 seconds tak type nahi kare,
+    // tab typing session stop kar do.
     typingTimeoutRef.current = setTimeout(() => {
-      if (!socket || !isConnected || !receiverId) {
-        return;
+      if (socket.connected) {
+        socket.emit(SOCKET_EVENTS.STOP_TYPING, {
+          receiverId,
+        });
       }
-
-      console.log("📤 Sending STOP TYPING event");
-
-      socket.emit(SOCKET_EVENTS.STOP_TYPING, {
-        receiverId,
-      });
 
       isTypingRef.current = false;
       typingTimeoutRef.current = null;
-    }, 1000);
+    }, 1500);
   };
 
   const stopTyping = () => {

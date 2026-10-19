@@ -161,7 +161,7 @@ export default function MessageComposer({
             }}
             onKeyDown={handleKeyDown}
             onBlur={() => {
-              if (!text.trim()) {
+              if (!editingMessage) {
                 onStopTyping?.();
               }
             }}
