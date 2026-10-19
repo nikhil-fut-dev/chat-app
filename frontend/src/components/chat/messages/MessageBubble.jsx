@@ -17,16 +17,20 @@ export default function MessageBubble({
 
   const isOwn = senderId?.toString() === currentUserId?.toString();
 
+  const senderName =
+    typeof message.sender === "object"
+      ? message.sender?.fullName || message.sender?.username || "User"
+      : "User";
+
+  const avatar =
+    typeof message.sender === "object" ? message.sender?.avatar : null;
+
   const time = message.createdAt
     ? new Date(message.createdAt).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       })
     : "";
-
-  // ==========================================
-  // Close menu when clicking outside
-  // ==========================================
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -42,23 +46,18 @@ export default function MessageBubble({
     };
   }, []);
 
-  // ==========================================
-  // Long Press
-  // ==========================================
-
+  // Long press for mobile
   const startLongPress = () => {
-    if (!isOwn || message.deleted) {
-      return;
-    }
+    if (!isOwn || message.deleted) return;
 
+    cancelLongPress();
     longPressTriggeredRef.current = false;
 
     pressTimerRef.current = setTimeout(() => {
       longPressTriggeredRef.current = true;
       setShowActions(true);
 
-      // Small vibration on supported mobile devices
-      if (navigator.vibrate) {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(30);
       }
     }, 500);
@@ -71,72 +70,66 @@ export default function MessageBubble({
     }
   };
 
-  // ==========================================
-  // Right Click - Desktop
-  // ==========================================
+  useEffect(() => {
+    return () => {
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+      }
+    };
+  }, []);
 
+  // Right-click for desktop
   const handleContextMenu = (event) => {
-    if (!isOwn || message.deleted) {
-      return;
-    }
+    if (!isOwn || message.deleted) return;
 
     event.preventDefault();
-
     cancelLongPress();
     setShowActions(true);
   };
 
-  // ==========================================
-  // Edit
-  // ==========================================
-
   const handleEdit = () => {
     setShowActions(false);
     cancelLongPress();
-
     onEdit?.(message);
   };
-
-  // ==========================================
-  // Delete
-  // ==========================================
 
   const handleDelete = () => {
     setShowActions(false);
     cancelLongPress();
-
     onDelete?.(message);
   };
 
   return (
     <div className={`flex w-full ${isOwn ? "justify-end" : "justify-start"}`}>
       <div
-        className={`flex max-w-[78%] items-end gap-2 sm:max-w-[65%] ${
+        className={`flex min-w-0 max-w-[92%] items-end gap-2 sm:max-w-[78%] lg:max-w-[70%] ${
           isOwn ? "flex-row-reverse" : ""
         }`}
       >
-        {/* Avatar for incoming messages */}
+        {/* Incoming user avatar */}
         {!isOwn && (
           <div className="mb-1 shrink-0">
-            {message.sender?.avatar ? (
+            {avatar ? (
               <img
-                src={message.sender.avatar}
-                alt={message.sender.fullName || "User"}
-                className="h-8 w-8 rounded-full object-cover"
+                src={avatar}
+                alt={senderName}
+                loading="lazy"
+                className="h-7 w-7 rounded-full border border-slate-700/70 object-cover sm:h-8 sm:w-8"
               />
             ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold text-slate-400">
-                {(message.sender?.fullName || message.sender?.username || "U")
-                  .charAt(0)
-                  .toUpperCase()}
+              <div
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-xs font-semibold text-slate-300 sm:h-8 sm:w-8"
+                aria-label={`${senderName} avatar`}
+              >
+                {senderName.charAt(0).toUpperCase()}
               </div>
             )}
           </div>
         )}
 
-        {/* Message */}
+        {/* Message and actions */}
         <div
-          className="relative min-w-0"
+          className="relative min-w-0 max-w-full"
           data-message-actions
           onPointerDown={startLongPress}
           onPointerUp={cancelLongPress}
@@ -144,67 +137,70 @@ export default function MessageBubble({
           onPointerCancel={cancelLongPress}
           onContextMenu={handleContextMenu}
         >
-          {/* ==========================================
-              Edit / Delete Menu
-          ========================================== */}
-
+          {/* Edit / Delete menu */}
           {showActions && isOwn && !message.deleted && (
             <div
-              className={`absolute z-50 ${
-                isOwn ? "right-0" : "left-0"
-              } bottom-full mb-2 flex items-center overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-1 shadow-2xl`}
+              className="absolute bottom-full right-0 z-50 mb-2 flex min-w-[150px] items-center rounded-xl border border-slate-700/80 bg-slate-900 p-1.5 shadow-xl shadow-black/30"
               onPointerDown={(event) => event.stopPropagation()}
             >
               <button
                 type="button"
                 onClick={handleEdit}
-                className="rounded-lg px-3 py-2 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white active:bg-slate-700"
+                className="min-h-10 flex-1 rounded-lg px-3 text-sm font-medium text-slate-200 transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 Edit
               </button>
 
-              <div className="h-5 w-px bg-slate-700" />
-
               <button
                 type="button"
                 onClick={handleDelete}
-                className="rounded-lg px-3 py-2 text-xs font-medium text-red-400 transition hover:bg-red-500/10 active:bg-red-500/20"
+                className="min-h-10 flex-1 rounded-lg px-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
               >
                 Delete
               </button>
             </div>
           )}
 
-          {/* Message Bubble */}
+          {/* Message bubble */}
           <div
             className={[
-              "rounded-2xl px-4 py-2.5 shadow-sm",
-              "select-none touch-manipulation",
+              "min-w-0 rounded-2xl px-3.5 py-2.5 sm:px-4",
+              "shadow-sm transition-colors duration-150",
               isOwn
-                ? "rounded-br-md bg-indigo-500 text-white"
-                : "rounded-bl-md border border-slate-800 bg-slate-900 text-slate-200",
+                ? "rounded-br-md bg-indigo-600 text-white"
+                : "rounded-bl-md border border-slate-800/90 bg-slate-900 text-slate-100",
             ].join(" ")}
           >
             {message.deleted ? (
-              <p className="text-sm italic opacity-60">
+              <p className="text-sm italic text-slate-400">
                 This message was deleted
               </p>
             ) : (
-              <p className="whitespace-pre-wrap break-words text-sm leading-6">
+              <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere] text-[14px] leading-[1.65] sm:text-sm">
                 {message.text}
               </p>
             )}
 
             <div
-              className={`mt-1.5 flex items-center justify-end gap-1.5 ${
-                isOwn ? "text-indigo-200" : "text-slate-600"
+              className={`mt-1.5 flex min-h-3.5 items-center justify-end gap-1.5 ${
+                isOwn ? "text-indigo-200" : "text-slate-500"
               }`}
             >
               {message.edited && !message.deleted && (
-                <span className="text-[10px]">edited</span>
+                <span className="text-[10px] italic">edited</span>
               )}
 
-              <span className="text-[10px]">{time}</span>
+              <time
+                className="text-[10px] tabular-nums"
+                dateTime={message.createdAt || undefined}
+                title={
+                  message.createdAt
+                    ? new Date(message.createdAt).toLocaleString()
+                    : undefined
+                }
+              >
+                {time}
+              </time>
 
               {isOwn && <MessageStatus message={message} />}
             </div>

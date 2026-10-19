@@ -151,12 +151,12 @@ export default function Chat() {
   return (
     <ChatLayout
       sidebarOpen={sidebarOpen}
-      onOpenSidebar={() => setSidebarOpen(true)}
       onCloseSidebar={() => setSidebarOpen(false)}
     >
       <div className="flex h-full min-w-0 flex-col bg-slate-950">
         <ChatHeader
           isTyping={isTyping}
+          onBack={() => setSidebarOpen(false)}
           onOpenSidebar={() => setSidebarOpen(true)}
         />
 

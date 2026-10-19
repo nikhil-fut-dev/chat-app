@@ -1,85 +1,105 @@
-import { Menu, Phone, Search, Video } from "lucide-react";
-import { useSelector } from "react-redux";
+import { ArrowLeft, Phone, Search, Video } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { clearActiveConversation } from "../../../store/slices/conversationSlice";
+export default function ChatHeader({
+  isTyping = false,
+  onBack,
+  onOpenSidebar,
+}) {
+  const dispatch = useDispatch();
 
-export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
   const activeConversation = useSelector(
     (state) => state.conversations.activeConversation,
   );
 
   const user = activeConversation?.user;
 
-  console.log("🧠 CHAT HEADER isTyping =", isTyping);
+  const actionButtonClass =
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95";
 
   if (!user) {
     return (
-      <header className="flex h-[76px] items-center border-b border-slate-800 bg-slate-950 px-5">
-        <p className="text-sm text-slate-500">
-          Select a conversation to start chatting
-        </p>
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 sm:h-[76px] sm:px-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+          <Search size={19} />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold text-white">Chats</h2>
+          <p className="text-xs text-slate-500">
+            Select a conversation to start chatting
+          </p>
+        </div>
       </header>
     );
   }
 
   const displayName = user.fullName || user.username || "Unknown user";
 
+  const lastSeenText = user.lastSeen
+    ? new Date(user.lastSeen).toLocaleString([], {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : null;
+
   return (
-    <header className="flex h-[68px] shrink-0 items-center justify-between border-b border-slate-800 bg-slate-950 px-3 sm:h-[76px] sm:px-5">
-      {/* LEFT */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <header className="relative z-10 flex h-16 shrink-0 items-center justify-between gap-1 border-b border-slate-800/90 bg-slate-950 px-2 sm:h-[76px] sm:px-4">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
+        {/* Mobile back-to-chats navigation */}
         <button
           type="button"
-          onClick={onOpenSidebar}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-900 hover:text-slate-100 lg:hidden"
-          aria-label="Open conversations"
-          title="Conversations"
+          onClick={() => {
+            dispatch(clearActiveConversation());
+            onBack?.();
+          }}
+          className={`${actionButtonClass} lg:hidden`}
+          aria-label="Back to chats"
+          title="Back to chats"
         >
-          <Menu size={21} />
+          <ArrowLeft size={22} />
         </button>
-        {/* Avatar */}
+
+        {/* User avatar */}
         <div className="relative shrink-0">
           {user.avatar ? (
             <img
               src={user.avatar}
               alt={displayName}
-              className="h-11 w-11 rounded-full object-cover"
+              className="h-10 w-10 rounded-full border border-slate-700 object-cover sm:h-11 sm:w-11"
             />
           ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-500/15 text-sm font-semibold text-indigo-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300 sm:h-11 sm:w-11">
               {displayName.charAt(0).toUpperCase()}
             </div>
           )}
 
           {user.isOnline && (
-            <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-slate-950 bg-emerald-500" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
           )}
         </div>
 
-        {/* User Info */}
-        <div className="min-w-0">
-          <h2 className="truncate text-sm font-semibold text-slate-100">
+        {/* Name and presence */}
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-sm font-semibold text-white sm:text-[15px]">
             {displayName}
           </h2>
 
-          {/* STATUS */}
-          <div className="mt-0.5 h-5">
+          <div className="mt-1 min-h-4">
             {isTyping ? (
-              <div className="flex items-center gap-1.5 text-xs font-medium text-indigo-400">
-                <span>Typing</span>
-
-                <span className="flex items-center gap-0.5">
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.3s]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400 [animation-delay:-0.15s]" />
-                  <span className="h-1 w-1 animate-bounce rounded-full bg-indigo-400" />
-                </span>
-              </div>
+              <p
+                className="text-xs font-medium text-emerald-400"
+                aria-live="polite"
+              >
+                typing…
+              </p>
             ) : user.isOnline ? (
-              <p className="text-xs text-slate-500">Online</p>
-            ) : user.lastSeen ? (
-              <p className="text-xs text-slate-500">
-                Last seen {new Date(user.lastSeen).toLocaleString()}
+              <p className="text-xs text-emerald-400">online</p>
+            ) : lastSeenText ? (
+              <p className="truncate text-xs text-slate-500">
+                last seen {lastSeenText}
               </p>
             ) : (
-              <p className="text-xs text-slate-500">
+              <p className="truncate text-xs text-slate-500">
                 @{user.username || "user"}
               </p>
             )}
@@ -87,28 +107,34 @@ export default function ChatHeader({ isTyping = false, onOpenSidebar }) {
         </div>
       </div>
 
-      {/* ACTIONS */}
-      <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+      {/* Existing actions; functionality must be connected separately */}
+      <div className="flex shrink-0 items-center gap-0 sm:gap-1">
         <button
           type="button"
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 sm:h-10 sm:w-10"
-          title="Search"
+          disabled
+          className={`${actionButtonClass} cursor-not-allowed opacity-40`}
+          aria-label="Message search not available yet"
+          title="Message search not connected yet"
         >
           <Search size={19} />
         </button>
 
         <button
           type="button"
-          className="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 md:flex"
-          title="Voice call"
+          disabled
+          className={`${actionButtonClass} cursor-not-allowed opacity-40`}
+          aria-label="Voice calling not available yet"
+          title="Voice calling not connected yet"
         >
           <Phone size={19} />
         </button>
 
         <button
           type="button"
-          className="hidden h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-900 hover:text-slate-200 sm:flex"
-          title="Video call"
+          disabled
+          className={`${actionButtonClass} cursor-not-allowed opacity-40`}
+          aria-label="Video calling not available yet"
+          title="Video calling not connected yet"
         >
           <Video size={20} />
         </button>
