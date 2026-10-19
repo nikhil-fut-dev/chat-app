@@ -25,4 +25,23 @@ export const SOCKET_EVENTS = {
 
   DELIVER_MESSAGE: "deliver_message",
   SEEN_MESSAGE: "seen_message",
+
+  // Audio / Video Calling
+  CALL_INITIATE: "call-initiate",
+  CALL_INCOMING: "call-incoming",
+  CALL_RINGING: "call-ringing",
+  CALL_ACCEPT: "call-accept",
+  CALL_ACCEPTED: "call-accepted",
+  CALL_REJECT: "call-reject",
+  CALL_REJECTED: "call-rejected",
+  CALL_END: "call-end",
+  CALL_ENDED: "call-ended",
+
+  // WebRTC Signaling
+  CALL_OFFER: "call-offer",
+  CALL_ANSWER: "call-answer",
+  CALL_ICE_CANDIDATE: "call-ice-candidate",
+
+  // Call errors
+  CALL_ERROR: "call-error",
 };

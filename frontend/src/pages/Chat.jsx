@@ -18,6 +18,9 @@ import {
   setActiveConversation,
 } from "../store/slices/conversationSlice";
 
+import useCalling from "../hooks/useCalling";
+import CallOverlay from "../components/chat/calling/CallOverlay";
+
 export default function Chat() {
   const dispatch = useDispatch();
 
@@ -48,6 +51,21 @@ export default function Chat() {
     startTyping,
     stopTyping,
   } = useMessages(receiverId);
+
+  const {
+    call,
+    callStatus,
+    localStream,
+    remoteStream,
+    isMuted,
+    isCameraOff,
+    startCall,
+    acceptCall,
+    rejectCall,
+    endCall,
+    toggleMute,
+    toggleCamera,
+  } = useCalling();
 
   /*
    * Clear edit mode whenever the selected user changes.
@@ -158,6 +176,8 @@ export default function Chat() {
           isTyping={isTyping}
           onBack={() => setSidebarOpen(false)}
           onOpenSidebar={() => setSidebarOpen(true)}
+          onStartCall={startCall}
+          callStatus={callStatus}
         />
 
         {activeConversation ? (
@@ -196,6 +216,19 @@ export default function Chat() {
           </div>
         )}
       </div>
+      <CallOverlay
+        call={call}
+        callStatus={callStatus}
+        localStream={localStream}
+        remoteStream={remoteStream}
+        isMuted={isMuted}
+        isCameraOff={isCameraOff}
+        onAccept={acceptCall}
+        onReject={rejectCall}
+        onEnd={endCall}
+        onToggleMute={toggleMute}
+        onToggleCamera={toggleCamera}
+      />
     </ChatLayout>
   );
 }

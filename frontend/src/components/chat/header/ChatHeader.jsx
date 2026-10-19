@@ -1,10 +1,13 @@
 import { ArrowLeft, Phone, Search, Video } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { clearActiveConversation } from "../../../store/slices/conversationSlice";
+
 export default function ChatHeader({
   isTyping = false,
   onBack,
   onOpenSidebar,
+  onStartCall,
+  callStatus = "idle",
 }) {
   const dispatch = useDispatch();
 
@@ -13,6 +16,7 @@ export default function ChatHeader({
   );
 
   const user = activeConversation?.user;
+  const isCallBusy = callStatus !== "idle";
 
   const actionButtonClass =
     "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95";
@@ -45,7 +49,6 @@ export default function ChatHeader({
   return (
     <header className="relative z-10 flex h-16 shrink-0 items-center justify-between gap-1 border-b border-slate-800/90 bg-slate-950 px-2 sm:h-[76px] sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
-        {/* Mobile back-to-chats navigation */}
         <button
           type="button"
           onClick={() => {
@@ -59,7 +62,6 @@ export default function ChatHeader({
           <ArrowLeft size={22} />
         </button>
 
-        {/* User avatar */}
         <div className="relative shrink-0">
           {user.avatar ? (
             <img
@@ -78,7 +80,6 @@ export default function ChatHeader({
           )}
         </div>
 
-        {/* Name and presence */}
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-sm font-semibold text-white sm:text-[15px]">
             {displayName}
@@ -107,7 +108,6 @@ export default function ChatHeader({
         </div>
       </div>
 
-      {/* Existing actions; functionality must be connected separately */}
       <div className="flex shrink-0 items-center gap-0 sm:gap-1">
         <button
           type="button"
@@ -121,20 +121,26 @@ export default function ChatHeader({
 
         <button
           type="button"
-          disabled
-          className={`${actionButtonClass} cursor-not-allowed opacity-40`}
-          aria-label="Voice calling not available yet"
-          title="Voice calling not connected yet"
+          disabled={isCallBusy}
+          onClick={() => onStartCall?.(user._id, "audio")}
+          className={`${actionButtonClass} ${
+            isCallBusy ? "cursor-not-allowed opacity-40" : ""
+          }`}
+          aria-label="Start voice call"
+          title={isCallBusy ? "A call is already in progress" : "Voice call"}
         >
           <Phone size={19} />
         </button>
 
         <button
           type="button"
-          disabled
-          className={`${actionButtonClass} cursor-not-allowed opacity-40`}
-          aria-label="Video calling not available yet"
-          title="Video calling not connected yet"
+          disabled={isCallBusy}
+          onClick={() => onStartCall?.(user._id, "video")}
+          className={`${actionButtonClass} ${
+            isCallBusy ? "cursor-not-allowed opacity-40" : ""
+          }`}
+          aria-label="Start video call"
+          title={isCallBusy ? "A call is already in progress" : "Video call"}
         >
           <Video size={20} />
         </button>
