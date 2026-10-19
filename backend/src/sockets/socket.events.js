@@ -90,7 +90,16 @@ export const registerSocketEvents = async (io, socket) => {
 
   socket.on("disconnect", async () => {
     try {
-      removeUser(socket.user._id);
+      const isLastSocket = removeUser(socket.user._id, socket.id);
+
+      // Agar user ka doosra socket abhi connected hai,
+      // to database ya online users list update nahi karni.
+      if (!isLastSocket) {
+        console.log(
+          `🔌 ${socket.user.username} disconnected one socket; user remains online`,
+        );
+        return;
+      }
 
       await updateUserStatus(socket.user._id, false);
 
