@@ -8,7 +8,10 @@ import {
   Activity,
   Wifi,
 } from "lucide-react";
+
 import CallVideo from "./CallVideo";
+import RemoteAudio from "./RemoteAudio";
+
 import { useEffect, useRef, useState } from "react";
 
 export default function CallOverlay({
@@ -202,6 +205,9 @@ export default function CallOverlay({
       aria-modal="true"
       aria-label={`${isVideo ? "Video" : "Audio"} call with ${title}`}
     >
+      {/* Dedicated playback for audio-only calls */}
+      {!isVideo && remoteStream && <RemoteAudio stream={remoteStream} />}
+
       {/* Full-screen video background */}
       {isVideo && remoteStream ? (
         <div className="absolute inset-0 bg-black">
