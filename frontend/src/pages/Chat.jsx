@@ -55,6 +55,7 @@ export default function Chat() {
   const {
     call,
     callStatus,
+    networkQuality,
     localStream,
     remoteStream,
     isMuted,
@@ -219,6 +220,7 @@ export default function Chat() {
       <CallOverlay
         call={call}
         callStatus={callStatus}
+        networkQuality={networkQuality}
         localStream={localStream}
         remoteStream={remoteStream}
         isMuted={isMuted}

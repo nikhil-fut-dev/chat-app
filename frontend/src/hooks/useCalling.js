@@ -38,12 +38,20 @@ export default function useCalling() {
   const [isMuted, setIsMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
 
+  const [networkQuality, setNetworkQuality] = useState({
+    level: "checking",
+    latency: null,
+    packetLoss: null,
+  });
+
   const peerRef = useRef(null);
   const localStreamRef = useRef(null);
   const callRef = useRef(null);
   const callStatusRef = useRef("idle");
   const isStartingRef = useRef(false);
   const pendingCandidatesRef = useRef([]);
+  const disconnectTimeoutRef = useRef(null);
+  const previousStatsRef = useRef(new Map());
 
   // Keep React state and ref synchronized.
   const updateCallStatus = useCallback((status) => {
@@ -53,6 +61,10 @@ export default function useCalling() {
 
   // Release media, peer connection and call state.
   const cleanup = useCallback(() => {
+    if (disconnectTimeoutRef.current) {
+      clearTimeout(disconnectTimeoutRef.current);
+      disconnectTimeoutRef.current = null;
+    }
     const peer = peerRef.current;
 
     if (peer) {
@@ -79,6 +91,14 @@ export default function useCalling() {
     setCall(null);
     setIsMuted(false);
     setIsCameraOff(false);
+
+    setNetworkQuality({
+      level: "checking",
+      latency: null,
+      packetLoss: null,
+    });
+
+    previousStatsRef.current.clear();
 
     updateCallStatus("idle");
   }, [updateCallStatus]);
@@ -144,11 +164,41 @@ export default function useCalling() {
       peer.onconnectionstatechange = () => {
         if (peerRef.current !== peer) return;
 
-        if (peer.connectionState === "connected") {
+        const state = peer.connectionState;
+
+        if (state === "connected") {
+          if (disconnectTimeoutRef.current) {
+            clearTimeout(disconnectTimeoutRef.current);
+            disconnectTimeoutRef.current = null;
+          }
+
           updateCallStatus("active");
+          return;
         }
 
-        if (peer.connectionState === "failed") {
+        if (state === "disconnected") {
+          updateCallStatus("reconnecting");
+
+          if (!disconnectTimeoutRef.current) {
+            disconnectTimeoutRef.current = setTimeout(() => {
+              disconnectTimeoutRef.current = null;
+
+              if (
+                peerRef.current === peer &&
+                peer.connectionState !== "connected"
+              ) {
+                toast.error("Connection lost. Please try calling again.");
+
+                socket.emit(SOCKET_EVENTS.CALL_END, { callId });
+                cleanup();
+              }
+            }, 10000);
+          }
+
+          return;
+        }
+
+        if (state === "failed") {
           toast.error("Call connection failed. Please try again.");
 
           socket.emit(SOCKET_EVENTS.CALL_END, { callId });
@@ -528,6 +578,117 @@ export default function useCalling() {
     };
   }, [socket, createPeer, cleanup, updateCallStatus, flushPendingCandidates]);
 
+  // Monitor real-time WebRTC connection quality.
+  useEffect(() => {
+    if (!["active", "reconnecting"].includes(callStatus)) {
+      previousStatsRef.current.clear();
+      return;
+    }
+
+    let stopped = false;
+    let isCollecting = false;
+
+    const collectStats = async () => {
+      const peer = peerRef.current;
+
+      if (!peer || peer.connectionState === "closed" || isCollecting) {
+        return;
+      }
+
+      isCollecting = true;
+
+      try {
+        const stats = await peer.getStats();
+
+        if (stopped || peerRef.current !== peer) return;
+
+        let latency = null;
+        let receivedDelta = 0;
+        let lostDelta = 0;
+
+        const currentStats = new Map();
+
+        stats.forEach((report) => {
+          if (
+            report.type === "candidate-pair" &&
+            report.state === "succeeded" &&
+            report.nominated &&
+            typeof report.currentRoundTripTime === "number"
+          ) {
+            const milliseconds = report.currentRoundTripTime * 1000;
+
+            if (latency === null || milliseconds < latency) {
+              latency = Math.round(milliseconds);
+            }
+          }
+
+          if (
+            report.type === "inbound-rtp" &&
+            !report.isRemote &&
+            (report.kind === "audio" || report.kind === "video")
+          ) {
+            const received = report.packetsReceived ?? 0;
+            const lost = report.packetsLost ?? 0;
+
+            const previous = previousStatsRef.current.get(report.id);
+
+            if (previous) {
+              receivedDelta += Math.max(0, received - previous.received);
+              lostDelta += Math.max(0, lost - previous.lost);
+            }
+
+            currentStats.set(report.id, { received, lost });
+          }
+        });
+
+        previousStatsRef.current = currentStats;
+
+        const totalPackets = receivedDelta + lostDelta;
+
+        const packetLoss =
+          totalPackets > 0
+            ? Math.round((lostDelta / totalPackets) * 100)
+            : null;
+
+        let level = "checking";
+
+        if (latency !== null || packetLoss !== null) {
+          if (
+            (latency !== null && latency > 300) ||
+            (packetLoss !== null && packetLoss > 5)
+          ) {
+            level = "poor";
+          } else if (
+            (latency !== null && latency > 150) ||
+            (packetLoss !== null && packetLoss > 2)
+          ) {
+            level = "fair";
+          } else {
+            level = "good";
+          }
+        }
+
+        if (!stopped) {
+          setNetworkQuality({ level, latency, packetLoss });
+        }
+      } catch (error) {
+        console.warn("Could not collect WebRTC network statistics:", error);
+      } finally {
+        isCollecting = false;
+      }
+    };
+
+    collectStats();
+
+    const intervalId = setInterval(collectStats, 2000);
+
+    return () => {
+      stopped = true;
+      clearInterval(intervalId);
+      previousStatsRef.current.clear();
+    };
+  }, [callStatus]);
+
   // Stop local media if the component using this hook unmounts.
   useEffect(() => {
     return () => {
@@ -546,6 +707,7 @@ export default function useCalling() {
     remoteStream,
     isMuted,
     isCameraOff,
+    networkQuality,
     startCall,
     acceptCall,
     rejectCall,

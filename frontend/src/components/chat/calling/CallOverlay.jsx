@@ -1,6 +1,15 @@
-import { Mic, MicOff, Phone, Video, VideoOff, X } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Phone,
+  Video,
+  VideoOff,
+  X,
+  Activity,
+  Wifi,
+} from "lucide-react";
 import CallVideo from "./CallVideo";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CallOverlay({
   call,
@@ -9,13 +18,78 @@ export default function CallOverlay({
   remoteStream,
   isMuted,
   isCameraOff,
+  networkQuality,
   onAccept,
   onReject,
   onEnd,
   onToggleMute,
   onToggleCamera,
 }) {
-  if (!call) return null;
+  const [previewPosition, setPreviewPosition] = useState(null);
+  const dragRef = useRef(null);
+
+  const [showControls, setShowControls] = useState(true);
+  const controlsTimeoutRef = useRef(null);
+
+  const handleOverlayInteraction = () => {
+    setShowControls(true);
+
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+
+    // Incoming call mein Accept/Decline controls visible rahenge.
+    if (callStatus !== "incoming") {
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 4000);
+    }
+  };
+
+  const handlePreviewPointerDown = (event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    dragRef.current = {
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    };
+
+    setPreviewPosition({
+      x: rect.left,
+      y: rect.top,
+    });
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePreviewPointerMove = (event) => {
+    const drag = dragRef.current;
+
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    const maxX = Math.max(0, window.innerWidth - rect.width);
+    const maxY = Math.max(0, window.innerHeight - rect.height);
+
+    setPreviewPosition({
+      x: Math.min(maxX, Math.max(0, event.clientX - drag.offsetX)),
+      y: Math.min(maxY, Math.max(0, event.clientY - drag.offsetY)),
+    });
+  };
+
+  const handlePreviewPointerUp = (event) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+
+    dragRef.current = null;
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
 
   const [callDuration, setCallDuration] = useState(0);
 
@@ -35,6 +109,22 @@ export default function CallOverlay({
     return () => clearInterval(intervalId);
   }, [callStatus, call?._id]);
 
+  useEffect(() => {
+    if (callStatus === "incoming") return;
+
+    controlsTimeoutRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 4000);
+
+    return () => {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, [call?.callId, callStatus]);
+
+  if (!call) return null;
+
   const formatDuration = (totalSeconds) => {
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -49,6 +139,35 @@ export default function CallOverlay({
   const isVideo = call.callType === "video";
   const isActive = callStatus === "active";
 
+  const quality = networkQuality?.level || "checking";
+
+  const qualityConfig = {
+    checking: {
+      label: "Checking network",
+      color: "text-slate-300",
+      icon: Activity,
+    },
+    good: {
+      label: "Good connection",
+      color: "text-emerald-400",
+      icon: Wifi,
+    },
+    fair: {
+      label: "Fair connection",
+      color: "text-amber-400",
+      icon: Wifi,
+    },
+    poor: {
+      label: "Poor connection",
+      color: "text-red-400",
+      icon: Wifi,
+    },
+  };
+
+  const currentQuality = qualityConfig[quality] || qualityConfig.checking;
+
+  const QualityIcon = currentQuality.icon;
+
   const title =
     call.caller?.username || call.receiver?.username || "Chat contact";
 
@@ -58,17 +177,20 @@ export default function CallOverlay({
       ? "Calling..."
       : callStatus === "connecting"
         ? "Connecting..."
-        : isActive
-          ? `Connected · ${formatDuration(callDuration)}`
-          : call.callType === "video"
-            ? "Video call"
-            : "Audio call";
+        : callStatus === "reconnecting"
+          ? "Reconnecting..."
+          : isActive
+            ? `Connected · ${formatDuration(callDuration)}`
+            : call.callType === "video"
+              ? "Video call"
+              : "Audio call";
 
   const controlClass =
     "flex h-14 w-14 shrink-0 items-center justify-center rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
   return (
     <div
+      onPointerDown={handleOverlayInteraction}
       className="fixed inset-0 z-[100] h-[100dvh] w-full overflow-hidden bg-slate-950 text-white"
       style={{
         paddingTop: "env(safe-area-inset-top, 0px)",
@@ -93,13 +215,40 @@ export default function CallOverlay({
       )}
 
       {/* Top information */}
-      <header className="absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/75 to-transparent px-4 pb-12 pt-4 sm:px-6 sm:pt-6">
+
+      <header
+        className={`absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 bg-gradient-to-b from-black/75 to-transparent px-4 pb-12 pt-4 transition-opacity duration-300 sm:px-6 sm:pt-6 ${
+          showControls || isIncoming
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold sm:text-xl">{title}</h2>
 
           <p className="mt-1 text-sm text-slate-300" aria-live="polite">
             {statusText}
           </p>
+          {(isActive || callStatus === "reconnecting") && (
+            <div
+              className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${currentQuality.color}`}
+              aria-live="polite"
+              aria-label={currentQuality.label}
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <QualityIcon size={14} />
+                {currentQuality.label}
+              </span>
+
+              {networkQuality?.latency != null && (
+                <span>{networkQuality.latency} ms latency</span>
+              )}
+
+              {networkQuality?.packetLoss != null && (
+                <span>{networkQuality.packetLoss}% packet loss</span>
+              )}
+            </div>
+          )}
         </div>
 
         {!isIncoming && (
@@ -144,7 +293,25 @@ export default function CallOverlay({
 
       {/* Local camera preview */}
       {isVideo && localStream && !isCameraOff && (
-        <div className="absolute right-3 top-20 z-20 h-32 w-24 overflow-hidden rounded-2xl border border-white/30 bg-slate-800 shadow-xl sm:right-6 sm:top-24 sm:h-48 sm:w-36">
+        <div
+          onPointerDown={handlePreviewPointerDown}
+          onPointerMove={handlePreviewPointerMove}
+          onPointerUp={handlePreviewPointerUp}
+          onPointerCancel={handlePreviewPointerUp}
+          style={{
+            ...(previewPosition
+              ? {
+                  left: `${previewPosition.x}px`,
+                  top: `${previewPosition.y}px`,
+                  right: "auto",
+                }
+              : {}),
+            touchAction: "none",
+            userSelect: "none",
+            cursor: "grab",
+          }}
+          className="absolute right-3 top-20 z-20 h-32 w-24 overflow-hidden rounded-2xl border border-white/30 bg-slate-800 shadow-xl sm:right-6 sm:top-24 sm:h-48 sm:w-36"
+        >
           <CallVideo
             stream={localStream}
             muted
@@ -163,7 +330,14 @@ export default function CallOverlay({
       )}
 
       {/* Bottom call controls */}
-      <footer className="absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black via-black/85 to-transparent px-4 pb-5 pt-16 sm:px-6 sm:pb-8">
+
+      <footer
+        className={`absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black via-black/85 to-transparent px-4 pb-5 pt-16 transition-opacity duration-300 sm:px-6 sm:pb-8 ${
+          showControls || isIncoming
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+      >
         {isIncoming ? (
           <div className="mx-auto flex w-full max-w-sm items-center justify-center gap-10">
             <button
