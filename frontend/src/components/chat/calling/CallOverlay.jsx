@@ -1,5 +1,6 @@
 import { Mic, MicOff, Phone, Video, VideoOff, X } from "lucide-react";
 import CallVideo from "./CallVideo";
+import { useEffect, useState } from "react";
 
 export default function CallOverlay({
   call,
@@ -16,6 +17,34 @@ export default function CallOverlay({
 }) {
   if (!call) return null;
 
+  const [callDuration, setCallDuration] = useState(0);
+
+  useEffect(() => {
+    if (callStatus !== "active") {
+      setCallDuration(0);
+      return;
+    }
+
+    const startedAt = Date.now();
+    setCallDuration(0);
+
+    const intervalId = setInterval(() => {
+      setCallDuration(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [callStatus, call?._id]);
+
+  const formatDuration = (totalSeconds) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+      2,
+      "0",
+    )}`;
+  };
+
   const isIncoming = callStatus === "incoming";
   const isVideo = call.callType === "video";
   const isActive = callStatus === "active";
@@ -30,7 +59,7 @@ export default function CallOverlay({
       : callStatus === "connecting"
         ? "Connecting..."
         : isActive
-          ? "Connected"
+          ? `Connected · ${formatDuration(callDuration)}`
           : call.callType === "video"
             ? "Video call"
             : "Audio call";
