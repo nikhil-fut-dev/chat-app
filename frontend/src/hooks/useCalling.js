@@ -3,11 +3,28 @@ import toast from "react-hot-toast";
 import { useSocketContext } from "../context/SocketContext";
 import { SOCKET_EVENTS } from "../socket/socketEvents";
 
+const turnUrls = (import.meta.env.VITE_TURN_URLS || "")
+  .split(",")
+  .map((url) => url.trim())
+  .filter(Boolean);
+
+const turnUsername = import.meta.env.VITE_TURN_USERNAME || "";
+const turnCredential = import.meta.env.VITE_TURN_CREDENTIAL || "";
+
 const ICE_SERVERS = {
   iceServers: [
     {
       urls: "stun:stun.l.google.com:19302",
     },
+    ...(turnUrls.length > 0 && turnUsername && turnCredential
+      ? [
+          {
+            urls: turnUrls,
+            username: turnUsername,
+            credential: turnCredential,
+          },
+        ]
+      : []),
   ],
 };
 
