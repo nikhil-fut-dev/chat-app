@@ -13,18 +13,29 @@ export default function MessageList({
   onEdit,
   onDelete,
 }) {
+  const scrollContainerRef = useRef(null);
   const bottomRef = useRef(null);
 
   const { socket, isConnected } = useSocketContext();
   const { user } = useSelector((state) => state.auth);
 
+  // Scroll only the message list, never the page or its parent.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end",
-    });
-  }, [messages]);
+    const container = scrollContainerRef.current;
 
+    if (!container || loading || messages.length === 0) return;
+
+    const frame = requestAnimationFrame(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "auto",
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [messages, loading]);
+
+  // Mark incoming messages as seen.
   useEffect(() => {
     if (!socket || !isConnected || !user?._id) return;
 
@@ -85,6 +96,7 @@ export default function MessageList({
 
   return (
     <div
+      ref={scrollContainerRef}
       className="chat-message-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#f8faf9] px-3 py-4 sm:px-5 sm:py-6 lg:px-6"
       aria-label="Conversation messages"
     >
