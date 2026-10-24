@@ -69,14 +69,6 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid rgb(18 134 106 / 24%);
-  outline-offset: 3px;
-}
-
 ::selection {
   color: #075541;
   background: #d7f4e8;
