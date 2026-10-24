@@ -1,75 +1,118 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ShieldCheck, Zap } from "lucide-react";
 
 export default function AuthLayout({ children, title, subtitle }) {
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="grid min-h-screen lg:grid-cols-2">
-        {/* Branding */}
-        <section className="relative hidden overflow-hidden lg:flex">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/30 via-slate-950 to-cyan-500/10" />
+    <main className="min-h-screen bg-[#f7f9f8] text-[#17211f]">
+      <div className="mx-auto grid min-h-screen max-w-[1600px] lg:grid-cols-[0.95fr_1.05fr]">
+        {/* Branding panel */}
+        <section className="relative hidden overflow-hidden bg-[#edf6f1] lg:flex">
+          <div className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-emerald-200/50 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-40 -right-24 h-[480px] w-[480px] rounded-full bg-teal-100/80 blur-3xl" />
 
-          <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-indigo-500/20 blur-3xl" />
-          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+          <div className="relative z-10 flex w-full flex-col justify-between p-10 xl:p-16">
+            <Brand />
 
-          <div className="relative z-10 flex w-full flex-col justify-between p-12">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-500 shadow-lg shadow-indigo-500/20">
-                <MessageCircle size={23} />
+            <div className="max-w-xl">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/75 px-3.5 py-2 text-xs font-semibold tracking-wide text-emerald-800">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                YOUR SPACE TO CONNECT
               </div>
 
-              <span className="text-xl font-bold tracking-tight">CBNK • Chat-App</span>
-            </div>
-
-            <div className="max-w-lg">
-              <p className="mb-4 text-sm font-medium uppercase tracking-[0.25em] text-indigo-400">
-                Real-time communication
-              </p>
-
-              <h1 className="text-5xl font-bold leading-tight">
-                Connect.
+              <h1 className="text-5xl font-semibold leading-[1.14] tracking-tight text-[#173d32] xl:text-6xl">
+                Conversations
                 <br />
-                Chat.
+                that bring us
                 <br />
-                Stay connected.
+                <span className="text-[#138568]">closer.</span>
               </h1>
 
-              <p className="mt-6 max-w-md text-base leading-7 text-slate-400">
-                A modern real-time messaging experience designed for fast,
-                private and seamless conversations.
+              <p className="mt-6 max-w-md text-base leading-8 text-[#687b73]">
+                A calmer, simpler way to stay in touch. Share messages, connect
+                in real time and make every conversation count.
               </p>
+
+              <div className="mt-10 grid max-w-md grid-cols-2 gap-3">
+                <Feature
+                  icon={<MessageCircle size={19} />}
+                  title="Real-time chat"
+                  description="Stay in the moment"
+                />
+                <Feature
+                  icon={<ShieldCheck size={19} />}
+                  title="Private sessions"
+                  description="Secure sign-in"
+                />
+              </div>
             </div>
 
-            <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} CBNK • Chat-App
+            <p className="text-xs text-[#84938c]">
+              © {new Date().getFullYear()} CBNK Chat-App. Made for meaningful
+              conversations.
             </p>
           </div>
         </section>
 
-        {/* Form */}
-        <section className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-8">
-          <div className="w-full max-w-md">
-            <div className="mb-8 lg:hidden">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500">
-                  <MessageCircle size={21} />
-                </div>
-
-                <span className="text-xl font-bold">CBNK • Chat-App</span>
-              </div>
+        {/* Authentication form */}
+        <section className="flex min-h-screen items-center justify-center px-5 py-8 sm:px-8 lg:px-12 xl:px-16">
+          <div className="w-full max-w-[420px]">
+            <div className="mb-10 lg:hidden">
+              <Brand />
             </div>
 
             <div className="mb-8">
-              <h2 className="text-3xl font-bold tracking-tight">{title}</h2>
+              <div className="mb-3 flex items-center gap-2 text-sm font-medium text-[#12866a]">
+                <Zap size={16} />
+                Welcome to CBNK
+              </div>
 
-              <p className="mt-2 text-sm leading-6 text-slate-400">
+              <h2 className="text-3xl font-semibold tracking-tight text-[#17211f] sm:text-[34px]">
+                {title}
+              </h2>
+
+              <p className="mt-2 text-sm leading-6 text-[#73817c] sm:text-[15px]">
                 {subtitle}
               </p>
             </div>
 
             {children}
+
+            <p className="mt-8 text-center text-xs leading-5 text-[#94a09a]">
+              By continuing, you agree to use CBNK Chat-App responsibly.
+            </p>
           </div>
         </section>
       </div>
     </main>
+  );
+}
+
+function Brand() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#12866a] text-white shadow-sm shadow-emerald-900/10">
+        <MessageCircle size={23} strokeWidth={2.2} />
+      </div>
+
+      <div>
+        <p className="text-[17px] font-bold tracking-tight text-[#173d32]">
+          CBNK <span className="font-medium text-[#12866a]">Chat-App</span>
+        </p>
+        <p className="mt-0.5 text-[11px] font-medium tracking-wide text-[#84938c]">
+          EVERY CONVERSATION MATTERS
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Feature({ icon, title, description }) {
+  return (
+    <div className="rounded-2xl border border-white/90 bg-white/70 p-4 shadow-sm shadow-emerald-950/[0.02]">
+      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#e0f3e9] text-[#12866a]">
+        {icon}
+      </div>
+      <p className="text-sm font-semibold text-[#234a3d]">{title}</p>
+      <p className="mt-1 text-xs text-[#84938c]">{description}</p>
+    </div>
   );
 }

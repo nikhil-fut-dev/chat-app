@@ -19,17 +19,17 @@ export default function ChatHeader({
   const isCallBusy = callStatus !== "idle";
 
   const actionButtonClass =
-    "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 active:scale-95";
+    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#687970] transition hover:bg-[#eef5f0] hover:text-[#176c53] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#12866a] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40";
 
   if (!user) {
     return (
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-800 bg-slate-950 px-4 sm:h-[76px] sm:px-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-[#e7eee9] bg-white px-4 sm:h-[76px] sm:px-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf6f1] text-[#12866a]">
           <Search size={19} />
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-white">Chats</h2>
-          <p className="text-xs text-slate-500">
+          <h2 className="text-sm font-semibold text-[#24312c]">Chats</h2>
+          <p className="text-xs text-[#839089]">
             Select a conversation to start chatting
           </p>
         </div>
@@ -47,7 +47,7 @@ export default function ChatHeader({
     : null;
 
   return (
-    <header className="relative z-10 flex h-16 shrink-0 items-center justify-between gap-1 border-b border-slate-800/90 bg-slate-950 px-2 sm:h-[76px] sm:px-4">
+    <header className="relative z-10 flex h-16 shrink-0 items-center justify-between gap-1 border-b border-[#e7eee9] bg-white px-2 sm:h-[76px] sm:px-4">
       <div className="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
         <button
           type="button"
@@ -67,40 +67,40 @@ export default function ChatHeader({
             <img
               src={user.avatar}
               alt={displayName}
-              className="h-10 w-10 rounded-full border border-slate-700 object-cover sm:h-11 sm:w-11"
+              className="h-10 w-10 rounded-full border border-[#e3ebe6] object-cover sm:h-11 sm:w-11"
             />
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15 text-sm font-semibold text-emerald-300 sm:h-11 sm:w-11">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e4f2e9] text-sm font-semibold text-[#28785e] sm:h-11 sm:w-11">
               {displayName.charAt(0).toUpperCase()}
             </div>
           )}
 
           {user.isOnline && (
-            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-slate-950 bg-emerald-400" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
           )}
         </div>
 
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold text-white sm:text-[15px]">
+          <h2 className="truncate text-sm font-semibold text-[#24312c] sm:text-[15px]">
             {displayName}
           </h2>
 
           <div className="mt-1 min-h-4">
             {isTyping ? (
               <p
-                className="text-xs font-medium text-emerald-400"
+                className="text-xs font-medium text-[#12866a]"
                 aria-live="polite"
               >
                 typing…
               </p>
             ) : user.isOnline ? (
-              <p className="text-xs text-emerald-400">online</p>
+              <p className="text-xs text-[#12866a]">online</p>
             ) : lastSeenText ? (
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-[#839089]">
                 last seen {lastSeenText}
               </p>
             ) : (
-              <p className="truncate text-xs text-slate-500">
+              <p className="truncate text-xs text-[#839089]">
                 @{user.username || "user"}
               </p>
             )}
@@ -123,9 +123,7 @@ export default function ChatHeader({
           type="button"
           disabled={isCallBusy}
           onClick={() => onStartCall?.(user._id, "audio")}
-          className={`${actionButtonClass} ${
-            isCallBusy ? "cursor-not-allowed opacity-40" : ""
-          }`}
+          className={actionButtonClass}
           aria-label="Start voice call"
           title={isCallBusy ? "A call is already in progress" : "Voice call"}
         >
@@ -136,9 +134,7 @@ export default function ChatHeader({
           type="button"
           disabled={isCallBusy}
           onClick={() => onStartCall?.(user._id, "video")}
-          className={`${actionButtonClass} ${
-            isCallBusy ? "cursor-not-allowed opacity-40" : ""
-          }`}
+          className={actionButtonClass}
           aria-label="Start video call"
           title={isCallBusy ? "A call is already in progress" : "Video call"}
         >

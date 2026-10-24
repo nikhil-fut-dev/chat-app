@@ -25,11 +25,8 @@ export default function MessageList({
     });
   }, [messages]);
 
-  // Mark incoming messages as seen
   useEffect(() => {
-    if (!socket || !isConnected || !user?._id) {
-      return;
-    }
+    if (!socket || !isConnected || !user?._id) return;
 
     messages.forEach((message) => {
       const senderId =
@@ -59,7 +56,7 @@ export default function MessageList({
   if (loading) {
     return (
       <div
-        className="flex min-h-0 flex-1 items-center justify-center"
+        className="flex min-h-0 flex-1 items-center justify-center bg-[#f8faf9]"
         role="status"
         aria-label="Loading messages"
       >
@@ -70,16 +67,16 @@ export default function MessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-5 py-8 text-center">
-        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-3xl border border-indigo-400/10 bg-indigo-500/10 text-indigo-300 shadow-lg shadow-indigo-950/20">
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto bg-[#f8faf9] px-5 py-8 text-center">
+        <div className="flex h-[72px] w-[72px] items-center justify-center rounded-3xl border border-[#e1eee6] bg-white text-[#12866a] shadow-sm">
           <MessageCircle size={31} strokeWidth={1.7} />
         </div>
 
-        <h3 className="mt-5 text-base font-semibold text-slate-200">
+        <h3 className="mt-5 text-base font-semibold text-[#34443c]">
           No messages yet
         </h3>
 
-        <p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">
+        <p className="mt-2 max-w-xs text-sm leading-6 text-[#839089]">
           Your conversation starts here. Send a message to say hello.
         </p>
       </div>
@@ -88,7 +85,7 @@ export default function MessageList({
 
   return (
     <div
-      className="chat-message-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-4 sm:px-5 sm:py-6 lg:px-6"
+      className="chat-message-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-[#f8faf9] px-3 py-4 sm:px-5 sm:py-6 lg:px-6"
       aria-label="Conversation messages"
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-3 sm:gap-4">

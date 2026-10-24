@@ -12,19 +12,27 @@ export default function RemoteAudio({ stream }) {
 
     if (!stream) return;
 
+    let cancelled = false;
+
     const playAudio = async () => {
       try {
         await audio.play();
       } catch (error) {
-        console.warn("Remote audio playback failed:", error);
+        if (!cancelled && error?.name !== "AbortError") {
+          console.warn("Remote audio playback could not start:", error);
+        }
       }
     };
 
     playAudio();
 
     return () => {
+      cancelled = true;
       audio.pause();
-      audio.srcObject = null;
+
+      if (audio.srcObject === stream) {
+        audio.srcObject = null;
+      }
     };
   }, [stream]);
 

@@ -11,33 +11,34 @@ export default function ChatLayout({
   );
 
   const hasActiveConversation = Boolean(activeConversation);
-
-  // Mobile: show chat list before a conversation is selected.
-  // After selection, show the chat panel.
-  // Desktop: keep both panels available.
   const showSidebar = sidebarOpen || !hasActiveConversation;
 
   return (
-    <main className="h-[100dvh] w-full overflow-hidden bg-slate-950 text-white">
+    <main className="h-[100dvh] w-full overflow-hidden bg-[#f5f8f7] text-slate-800">
       <div className="relative flex h-full min-h-0 min-w-0">
+        {/* Mobile sidebar backdrop */}
         {sidebarOpen && hasActiveConversation && (
           <button
             type="button"
-            aria-label="Close conversations"
+            aria-label="Close conversations menu"
             onClick={onCloseSidebar}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[2px] lg:hidden"
+            className="fixed inset-0 z-40 bg-slate-950/30 backdrop-blur-[2px] lg:hidden"
           />
         )}
 
+        {/* Conversations sidebar */}
         <ChatSidebar isOpen={showSidebar} onClose={onCloseSidebar} />
 
+        {/* Main chat panel */}
         <section
           className={[
-            "min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-950",
+            "relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white",
             hasActiveConversation ? "flex" : "hidden lg:flex",
           ].join(" ")}
         >
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            {children}
+          </div>
         </section>
       </div>
     </main>

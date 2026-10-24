@@ -29,8 +29,6 @@ export default function Chat() {
   const [editingMessage, setEditingMessage] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { user } = useSelector((state) => state.auth);
-
   const activeConversation = useSelector(
     (state) => state.conversations.activeConversation,
   );
@@ -38,8 +36,6 @@ export default function Chat() {
   const receiverId = activeConversation?.user?._id;
 
   const { isTyping } = useMessageSocket(receiverId);
-
-  console.log("🔥 CHAT RENDER isTyping =", isTyping);
 
   const {
     messages,
@@ -68,26 +64,21 @@ export default function Chat() {
     toggleCamera,
   } = useCalling();
 
-  /*
-   * Clear edit mode whenever the selected user changes.
-   */
+  // Clear edit mode when the selected conversation changes.
   useEffect(() => {
     setEditingMessage(null);
   }, [receiverId]);
 
-  /*
-   * Send message / edit message
-   */
+  // Send a new message or save an edited message.
   const handleSend = async (text) => {
-    if (!text?.trim()) {
+    const trimmedText = text?.trim();
+
+    if (!trimmedText) {
       return false;
     }
 
-    /*
-     * Existing message edit
-     */
     if (editingMessage) {
-      const success = await editMessage(editingMessage._id, text.trim());
+      const success = await editMessage(editingMessage._id, trimmedText);
 
       if (success) {
         setEditingMessage(null);
@@ -96,67 +87,40 @@ export default function Chat() {
       return success;
     }
 
-    /*
-     * New message
-     *
-     * Backend will automatically create the conversation
-     * if this is the first message between both users.
-     */
-    const message = await sendMessage(text.trim());
+    const message = await sendMessage(trimmedText);
 
     if (!message) {
       return false;
     }
 
-    /*
-     * After the first message the backend has created
-     * the real Conversation document.
-     *
-     * Fetch conversations again so Redux gets the real
-     * conversationId instead of temporary `new-userId`.
-     */
+    // Refresh the conversation list after the first message.
     try {
       const response = await getConversations();
-
       const conversations = response.data || [];
 
       dispatch(setConversations(conversations));
 
-      /*
-       * Find the newly created conversation.
-       *
-       * Usually there will be only one conversation for
-       * these two users.
-       */
       const createdConversation = conversations.find(
-        (conversation) =>
-          conversation.user?._id?.toString() === receiverId?.toString(),
+        (conversation) => String(conversation.user?._id) === String(receiverId),
       );
 
       if (createdConversation) {
         dispatch(setActiveConversation(createdConversation));
       }
     } catch (error) {
-      const message =
+      toast.error(
         error?.response?.data?.message ||
-        "Message sent, but conversation could not be refreshed.";
-
-      toast.error(message);
+          "Message sent, but the conversation list could not be refreshed.",
+      );
     }
 
     return true;
   };
 
-  /*
-   * Start editing a message
-   */
   const handleEdit = (message) => {
     setEditingMessage(message);
   };
 
-  /*
-   * Delete a message
-   */
   const handleDelete = async (message) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this message?",
@@ -172,7 +136,7 @@ export default function Chat() {
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
     >
-      <div className="flex h-full min-w-0 flex-col bg-slate-950">
+      <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-slate-50">
         <ChatHeader
           isTyping={isTyping}
           onBack={() => setSidebarOpen(false)}
@@ -200,13 +164,15 @@ export default function Chat() {
             />
           </>
         ) : (
-          <div className="flex flex-1 items-center justify-center bg-slate-900/30 px-6">
+          <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50 px-6">
             <div className="max-w-sm text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-400">
-                <span className="text-2xl">💬</span>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600">
+                <span className="text-2xl" aria-hidden="true">
+                  
+                </span>
               </div>
 
-              <h2 className="mt-5 text-xl font-semibold text-slate-200">
+              <h2 className="mt-5 text-xl font-semibold text-slate-800">
                 Select a conversation
               </h2>
 
@@ -217,6 +183,7 @@ export default function Chat() {
           </div>
         )}
       </div>
+
       <CallOverlay
         call={call}
         callStatus={callStatus}
