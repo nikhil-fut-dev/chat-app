@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import ChatSidebar from "./ChatSidebar";
 
@@ -13,10 +14,37 @@ export default function ChatLayout({
   const hasActiveConversation = Boolean(activeConversation);
   const showSidebar = sidebarOpen || !hasActiveConversation;
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+
+    const updateAppHeight = () => {
+      // Use the visible viewport height when the mobile keyboard opens.
+      const height = viewport?.height || window.innerHeight;
+
+      root.style.setProperty("--app-height", `${height}px`);
+    };
+
+    updateAppHeight();
+
+    window.addEventListener("resize", updateAppHeight);
+    window.addEventListener("orientationchange", updateAppHeight);
+    viewport?.addEventListener("resize", updateAppHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateAppHeight);
+      window.removeEventListener("orientationchange", updateAppHeight);
+      viewport?.removeEventListener("resize", updateAppHeight);
+      root.style.removeProperty("--app-height");
+    };
+  }, []);
+
   return (
-    <main className="h-[100dvh] w-full overflow-hidden bg-[#f5f8f7] text-slate-800">
-      <div className="relative flex h-full min-h-0 min-w-0">
-        {/* Mobile sidebar backdrop */}
+    <main
+      className="w-full overflow-hidden bg-[#f5f8f7] text-slate-800"
+      style={{ height: "var(--app-height, 100dvh)" }}
+    >
+      <div className="relative flex h-full min-h-0 min-w-0 overflow-hidden">
         {sidebarOpen && hasActiveConversation && (
           <button
             type="button"
@@ -26,10 +54,8 @@ export default function ChatLayout({
           />
         )}
 
-        {/* Conversations sidebar */}
         <ChatSidebar isOpen={showSidebar} onClose={onCloseSidebar} />
 
-        {/* Main chat panel */}
         <section
           className={[
             "relative min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-white",

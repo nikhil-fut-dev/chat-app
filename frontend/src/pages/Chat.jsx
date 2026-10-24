@@ -136,7 +136,7 @@ export default function Chat() {
       sidebarOpen={sidebarOpen}
       onCloseSidebar={() => setSidebarOpen(false)}
     >
-      <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-slate-50">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-slate-50">
         <ChatHeader
           isTyping={isTyping}
           onBack={() => setSidebarOpen(false)}
@@ -167,9 +167,7 @@ export default function Chat() {
           <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50 px-6">
             <div className="max-w-sm text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600">
-                <span className="text-2xl" aria-hidden="true">
-                  
-                </span>
+                <span className="text-2xl" aria-hidden="true"></span>
               </div>
 
               <h2 className="mt-5 text-xl font-semibold text-slate-800">
