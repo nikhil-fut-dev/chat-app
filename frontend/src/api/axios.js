@@ -3,10 +3,23 @@ import axios from "axios";
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
+
+// Set JSON Content-Type only for non-FormData requests.
+API.interceptors.request.use(
+  (config) => {
+    if (config.data instanceof FormData) {
+      // Let the browser set multipart/form-data with its boundary.
+      delete config.headers["Content-Type"];
+      delete config.headers["content-type"];
+    } else if (config.data !== undefined) {
+      config.headers["Content-Type"] = "application/json";
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 let isRefreshing = false;
 let refreshSubscribers = [];
@@ -56,7 +69,6 @@ API.interceptors.response.use(
       return API(originalRequest);
     } catch (refreshError) {
       refreshSubscribers = [];
-
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;

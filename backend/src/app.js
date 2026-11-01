@@ -16,6 +16,8 @@ import conversationRoutes from "./routes/conversation.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 
+import mediaRoutes from "./media/routes/media.routes.js";
+
 const app = express();
 
 app.use(helmet());
@@ -43,6 +45,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/conversations", conversationRoutes);
 app.use("/api/v1/upload", uploadRoutes);
 app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/media", mediaRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

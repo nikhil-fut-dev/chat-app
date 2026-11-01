@@ -12,11 +12,14 @@ import useMessageSocket from "../hooks/useMessageSocket";
 import useOnlineStatus from "../hooks/useOnlineStatus";
 
 import { getConversations } from "../api/conversationApi";
+import { sendMediaMessage } from "../api/messageApi";
 
 import {
   setConversations,
   setActiveConversation,
 } from "../store/slices/conversationSlice";
+
+import { addMessage } from "../store/slices/messageSlice";
 
 import useCalling from "../hooks/useCalling";
 import CallOverlay from "../components/chat/calling/CallOverlay";
@@ -69,7 +72,30 @@ export default function Chat() {
     setEditingMessage(null);
   }, [receiverId]);
 
-  // Send a new message or save an edited message.
+  // Refresh the conversation list after sending a message.
+  const refreshConversationList = async () => {
+    try {
+      const response = await getConversations();
+      const conversations = response.data || [];
+
+      dispatch(setConversations(conversations));
+
+      const updatedConversation = conversations.find(
+        (conversation) => String(conversation.user?._id) === String(receiverId),
+      );
+
+      if (updatedConversation) {
+        dispatch(setActiveConversation(updatedConversation));
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Message sent, but the conversation list could not be refreshed.",
+      );
+    }
+  };
+
+  // Send a text message or save an edited message.
   const handleSend = async (text) => {
     const trimmedText = text?.trim();
 
@@ -93,28 +119,75 @@ export default function Chat() {
       return false;
     }
 
-    // Refresh the conversation list after the first message.
-    try {
-      const response = await getConversations();
-      const conversations = response.data || [];
-
-      dispatch(setConversations(conversations));
-
-      const createdConversation = conversations.find(
-        (conversation) => String(conversation.user?._id) === String(receiverId),
-      );
-
-      if (createdConversation) {
-        dispatch(setActiveConversation(createdConversation));
-      }
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message ||
-          "Message sent, but the conversation list could not be refreshed.",
-      );
-    }
+    await refreshConversationList();
 
     return true;
+  };
+
+  // Upload and send an image/video with an optional caption.
+  const handleSendMedia = async (payload = {}) => {
+    console.log("[Chat] Media callback payload:", payload);
+
+    const { file, caption = "", onUploadProgress, signal } = payload;
+
+    if (!receiverId) {
+      toast.error("Please select a conversation first.");
+      return false;
+    }
+
+    if (!(file instanceof File)) {
+      console.error("[Chat] Missing or invalid File object:", file);
+      toast.error("Image file receive nahi hui. Please dobara select karo.");
+      return false;
+    }
+
+    try {
+      const response = await sendMediaMessage({
+        receiverId,
+        caption: caption.trim(),
+        file,
+        signal,
+        onUploadProgress,
+      });
+
+      const mediaMessage = response?.data;
+
+      if (!mediaMessage?._id) {
+        console.error("[Chat] Unexpected media API response:", response);
+        toast.error("Upload hua, lekin message response nahi mila.");
+        return false;
+      }
+
+      dispatch(addMessage(mediaMessage));
+
+      await refreshConversationList();
+
+      toast.success(
+        file.type.startsWith("video/")
+          ? "Video sent successfully."
+          : "Image sent successfully.",
+      );
+
+      return true;
+    } catch (error) {
+      if (
+        error?.code === "ERR_CANCELED" ||
+        error?.name === "CanceledError" ||
+        error?.name === "AbortError"
+      ) {
+        return false;
+      }
+
+      console.error("[Chat] Media upload failed:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to upload media. Please try again.",
+      );
+
+      return false;
+    }
   };
 
   const handleEdit = (message) => {
@@ -156,6 +229,7 @@ export default function Chat() {
 
             <MessageComposer
               onSend={handleSend}
+              onSendMedia={handleSendMedia}
               isSending={isSending}
               editingMessage={editingMessage}
               onCancelEdit={() => setEditingMessage(null)}
@@ -167,7 +241,9 @@ export default function Chat() {
           <div className="flex min-h-0 flex-1 items-center justify-center bg-slate-50 px-6">
             <div className="max-w-sm text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-100 bg-emerald-50 text-emerald-600">
-                <span className="text-2xl" aria-hidden="true"></span>
+                <span className="text-2xl" aria-hidden="true">
+                  💬
+                </span>
               </div>
 
               <h2 className="mt-5 text-xl font-semibold text-slate-800">
